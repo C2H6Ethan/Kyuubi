@@ -8,6 +8,7 @@ import { createStackNavigator } from 'react-navigation-stack';
 import { createAppContainer } from 'react-navigation';
 import HomeScreen from './screens/home';
 import SettingsScreen from './screens/settings';
+import CardStackStyleInterpolator from "react-navigation/src/views/StackView/StackViewStyleInterpolator";
 
 
 const screens = {
@@ -15,12 +16,14 @@ const screens = {
     screen: HomeScreen,
       navigationOptions: {
         header: null,
+        cardStyleInterpolator: CardStyleInterpolators.forHorizontalIOS
       },
   },
   SettingsScreen: {
     screen: SettingsScreen,
       navigationOptions: {
         header: null,
+        cardStyleInterpolator: CardStyleInterpolators.forHorizontalIOS
       },
   },
 }
