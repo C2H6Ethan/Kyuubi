@@ -70,6 +70,10 @@ export default class HomeScreen extends Component{
             {
                 this.setState({isTimerDisabled: true})
             }
+            else 
+            {
+                this.setState({isTimerDisabled: false})
+            }
             
             this.setState({ timerColor: 'red'});
             this.greenTimer = setTimeout(() => { this.setState({timerColor: 'lime'}) }, 250);
@@ -120,14 +124,14 @@ export default class HomeScreen extends Component{
         return (
             <SafeAreaView style={styles.container}>
                 <TouchableOpacity activeOpacity={1} style={styles.scramble} onPress={this.handleNewScramble}>
-                <Text style={styles.scrambleText}>{this.state.scrambleText}</Text>
+                    <Text style={styles.scrambleText}>{this.state.scrambleText}</Text>
                 </TouchableOpacity>
                 <TouchableOpacity activeOpacity={1} style={styles.timer} onPressIn={this.handleTimerPressIn} onPressOut={this.handleTimerPressOut}>
-                <Text style={{ color: this.state.timerColor, fontSize: 50, bottom: '25%'}}>{this.state.timerText}</Text>
+                    <Text style={{ color: this.state.timerColor, fontSize: 50, bottom: '25%'}}>{this.state.timerText}</Text>
                 </TouchableOpacity>
                 <StatusBar style="auto" />
                 <View style={styles.pageNavigator}>
-                    <TouchableOpacity onPress={() => this.props.navigation.navigate('SettingsScreen', {callHome:this.checkSwitches.bind(this)})}>
+                    <TouchableOpacity onPress={() => this.props.navigation.navigate('SettingsScreen')}>
                         <Image style={styles.pagesButton} source={require('../assets/settings.png')}/>
                     </TouchableOpacity>
                     <TouchableOpacity>

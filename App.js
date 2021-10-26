@@ -13,13 +13,15 @@ const screens = {
     screen: HomeScreen,
       navigationOptions: {
         headerShown: false,
+        gestureEnabled: false,
       },
   },
   SettingsScreen: {
     screen: SettingsScreen,
       navigationOptions: {
         headerShown: false,
-        gestureDirection: 'horizontal-inverted'
+        gestureDirection: 'horizontal-inverted',
+        gestureEnabled: false,
       },
   },
 }
