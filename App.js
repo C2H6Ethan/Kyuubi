@@ -14,13 +14,15 @@ const screens = {
   HomeScreen: {
     screen: HomeScreen,
       navigationOptions: {
-        header: null,
+        headerShown: false,
+        animationEnabled: false,
       },
   },
   SettingsScreen: {
     screen: SettingsScreen,
       navigationOptions: {
-        header: null,
+        headerShown: false,
+        animationEnabled: false,
       },
   },
 }

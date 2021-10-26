@@ -2,6 +2,7 @@ import { StatusBar } from 'expo-status-bar';
 import React, { Component } from 'react';
 import { SafeAreaView, StyleSheet, Text, TouchableOpacity, View, Button, Image } from 'react-native';
 import Scrambo from 'scrambo';
+import { AsyncStorage } from "@react-native-async-storage/async-storage";
 
 var scrambo = new Scrambo();
 var scramble = scrambo.get(1);
@@ -15,6 +16,16 @@ export default class HomeScreen extends Component{
         timerColor : 'black',
         isTimerRunning: false
     }
+
+    returnData = async (key) => {
+        try {
+            const value = await AsyncStorage.getItem(key);
+            return value;
+        } 
+        catch (error) {
+            // Error saving data
+        }
+    }
     
     handleNewScramble = () => {
         newScramble = scrambo.get(1);
@@ -23,7 +34,7 @@ export default class HomeScreen extends Component{
         })
     }
     
-    handleTimerPressIn = () => {
+    handleTimerPressIn = async () => {
         if (this.state.isTimerRunning)
         {
         // finish timer
@@ -36,6 +47,10 @@ export default class HomeScreen extends Component{
         timerColor: 'red'
         })
         this.greenTimer = setTimeout(() => { this.setState({timerColor: 'lime'}) }, 250);
+
+        //test
+        var value = await this.returnData("isTimerDisabled");
+        console.log(value)
     }
     
     handleTimerPressOut = () => {
@@ -59,6 +74,8 @@ export default class HomeScreen extends Component{
         
         var seconds = diff / 1000;
         var seconds = seconds.toFixed(2);
+
+
         this.setState({timerText: seconds})
     
         this.timerTimout = setTimeout(() => { this.handleStartTimer(); }, 10);
