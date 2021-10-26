@@ -2,7 +2,7 @@ import { StatusBar } from 'expo-status-bar';
 import React, { Component } from 'react';
 import { SafeAreaView, StyleSheet, Text, TouchableOpacity, View, Button, Image } from 'react-native';
 import Scrambo from 'scrambo';
-import { AsyncStorage } from "@react-native-async-storage/async-storage";
+import AsyncStorage  from "@react-native-async-storage/async-storage";
 
 var scrambo = new Scrambo();
 var scramble = scrambo.get(1);
@@ -10,11 +10,25 @@ var scramble = scrambo.get(1);
 
 export default class HomeScreen extends Component{
 
-    state = {
-        scrambleText: scramble,
-        timerText: '0.00',
-        timerColor : 'black',
-        isTimerRunning: false
+    constructor (props){
+        super(props);
+
+        this.state = {
+            scrambleText: scramble,
+            timerText: '0.00',
+            hiddentTimerText: '0.00',
+            timerColor : 'black',
+            isTimerRunning: false,
+            isTimerDisabled: false,
+        };
+
+    }
+    componentDidMount = async() =>{
+        var isTimerDisabledValue = await AsyncStorage.getItem("isTimerDisabled");
+        if (isTimerDisabledValue == "true")
+        {
+            this.setState({isTimerDisabled: true});
+        }
     }
 
     returnData = async (key) => {
@@ -23,7 +37,7 @@ export default class HomeScreen extends Component{
             return value;
         } 
         catch (error) {
-            // Error saving data
+            console.warn(error);
         }
     }
     
@@ -39,21 +53,15 @@ export default class HomeScreen extends Component{
         {
         // finish timer
         clearTimeout(this.timerTimout);
-        this.setState({isTimerRunning: false});
+        this.setState({isTimerRunning: false, timerText: this.state.hiddentTimerText});
     
         }
     
-        this.setState({
-        timerColor: 'red'
-        })
+        this.setState({ timerColor: 'red'});
         this.greenTimer = setTimeout(() => { this.setState({timerColor: 'lime'}) }, 250);
-
-        //test
-        var value = await this.returnData("isTimerDisabled");
-        console.log(value)
     }
     
-    handleTimerPressOut = () => {
+    handleTimerPressOut = async () => {
         clearTimeout(this.greenTimer);
         this.setState({
         timerColor: 'black'
@@ -62,21 +70,30 @@ export default class HomeScreen extends Component{
         if (this.state.timerColor == 'lime'){
         // start timer
         this.setState({isTimerRunning: true})
-    
+        
+
         this.startTime = new Date();
         this.handleStartTimer();
         }
     }
     
-    handleStartTimer = () => {
+    handleStartTimer = async () => {
         var now = new Date();
         var diff = now - this.startTime;
         
         var seconds = diff / 1000;
         var seconds = seconds.toFixed(2);
 
-
-        this.setState({timerText: seconds})
+        var isTimerDisabled = this.state.isTimerDisabled;
+        
+        if(isTimerDisabled == false)
+        {
+            this.setState({timerText: seconds, hiddentTimerText: seconds})
+        }
+        else 
+        {
+            this.setState({hiddentTimerText: seconds, timerText: ':)'})
+        }
     
         this.timerTimout = setTimeout(() => { this.handleStartTimer(); }, 10);
     }

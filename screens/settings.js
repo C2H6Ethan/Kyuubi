@@ -1,27 +1,34 @@
 import { StatusBar } from 'expo-status-bar';
 import React, { Component } from 'react';
 import { SafeAreaView, StyleSheet, Text, TouchableOpacity, View, Button, Image, Switch } from 'react-native';
-import { AsyncStorage } from "@react-native-async-storage/async-storage";
+import  AsyncStorage  from "@react-native-async-storage/async-storage";
 
 export default class SettingsScreen extends Component{
     constructor(props){
         super(props);
-    
+
         this.state = {
           isTimerDisabled: false
         };
+
+        this._loadToggles();
+    }
+
+    _loadToggles = async () => {
+        const value = await AsyncStorage.getItem("isTimerDisabled");
+        if (value == "true") { this.setState({ isTimerDisabled: true }); }
     }
 
     toggleTimerDisableSwitch = async () => {
         if (this.state.isTimerDisabled)
         {
             this.setState({isTimerDisabled: false});
-            this.storeData("isTimerDisabled", false)
+            this.storeData("isTimerDisabled", "false")
         }
         else
         {
             this.setState({isTimerDisabled: true})
-            this.storeData("isTimerDisabled", true)
+            this.storeData("isTimerDisabled", "true")
         }
     }
 
@@ -30,10 +37,24 @@ export default class SettingsScreen extends Component{
             await AsyncStorage.setItem(key, value);
         } 
         catch (error) {
-            // Error saving data
+            console.warn(error);
         }
     }
     
+    checkToggles = async () =>{
+        try {
+            const value = await AsyncStorage.getItem("isTimerDisabled");
+            if (value == "true"){
+                this.setState ({
+                    isTimerDisabled: true,
+                })
+            }
+        } 
+        catch (error) {
+            console.warn(error)
+        }
+    }
+
 
     render(){
         const { navigate } = this.props.navigation;
@@ -58,7 +79,7 @@ export default class SettingsScreen extends Component{
                     <TouchableOpacity onPress={() => this.props.navigation.navigate('SettingsScreen')}>
                         <Image style={styles.pagesButton} source={require('../assets/settings.png')}/>
                     </TouchableOpacity>
-                    <TouchableOpacity onPress={() => this.props.navigation.navigate('HomeScreen')}>
+                    <TouchableOpacity onPress={() => this.props.navigation.push('HomeScreen')}>
                         <Image style={styles.pagesButton} source={require('../assets/home.png')}/>
                     </TouchableOpacity>
                     <TouchableOpacity>
