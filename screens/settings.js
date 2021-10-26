@@ -19,6 +19,10 @@ export default class SettingsScreen extends Component{
         if (value == "true") { this.setState({ isTimerDisabled: true }); }
     }
 
+    componentWillUnmount(){
+        
+    }
+
     toggleTimerDisableSwitch = async () => {
         if (this.state.isTimerDisabled)
         {
@@ -76,10 +80,10 @@ export default class SettingsScreen extends Component{
 
 
                 <View style={styles.pageNavigator}>
-                    <TouchableOpacity onPress={() => this.props.navigation.navigate('SettingsScreen')}>
+                    <TouchableOpacity>
                         <Image style={styles.pagesButton} source={require('../assets/settings.png')}/>
                     </TouchableOpacity>
-                    <TouchableOpacity onPress={() => this.props.navigation.push('HomeScreen')}>
+                    <TouchableOpacity onPress={() => this.props.navigation.navigate('HomeScreen', {isTimerDisabled: this.state.isTimerDisabled})}>
                         <Image style={styles.pagesButton} source={require('../assets/home.png')}/>
                     </TouchableOpacity>
                     <TouchableOpacity>

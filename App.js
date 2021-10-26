@@ -1,7 +1,5 @@
-import { StatusBar } from 'expo-status-bar';
 import React, { Component } from 'react';
-import { SafeAreaView, StyleSheet, Text, TouchableOpacity, View, Button, Image } from 'react-native';
-import Scrambo from 'scrambo';
+import { Easing, Animated } from 'react-native';
 import { StackNavigator } from 'react-navigation'
 import { NavigationContainer } from '@react-navigation/native';
 import { createStackNavigator } from 'react-navigation-stack';
@@ -15,14 +13,13 @@ const screens = {
     screen: HomeScreen,
       navigationOptions: {
         headerShown: false,
-        animationEnabled: false,
       },
   },
   SettingsScreen: {
     screen: SettingsScreen,
       navigationOptions: {
         headerShown: false,
-        animationEnabled: false,
+        gestureDirection: 'horizontal-inverted'
       },
   },
 }

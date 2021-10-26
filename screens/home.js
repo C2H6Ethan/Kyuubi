@@ -24,6 +24,10 @@ export default class HomeScreen extends Component{
 
     }
     componentDidMount = async() =>{
+        this.checkSwitches();
+    }
+
+    checkSwitches = async () => {
         var isTimerDisabledValue = await AsyncStorage.getItem("isTimerDisabled");
         if (isTimerDisabledValue == "true")
         {
@@ -54,11 +58,24 @@ export default class HomeScreen extends Component{
         // finish timer
         clearTimeout(this.timerTimout);
         this.setState({isTimerRunning: false, timerText: this.state.hiddentTimerText});
+
+        // set new scramble
+        var newScramble = scrambo.get(1);
+        this.setState({scrambleText: newScramble});
     
         }
+        else
+        {
+            if(this.props.navigation.getParam('isTimerDisabled'))
+            {
+                this.setState({isTimerDisabled: true})
+            }
+            
+            this.setState({ timerColor: 'red'});
+            this.greenTimer = setTimeout(() => { this.setState({timerColor: 'lime'}) }, 250);
+        }
     
-        this.setState({ timerColor: 'red'});
-        this.greenTimer = setTimeout(() => { this.setState({timerColor: 'lime'}) }, 250);
+        
     }
     
     handleTimerPressOut = async () => {
@@ -110,7 +127,7 @@ export default class HomeScreen extends Component{
                 </TouchableOpacity>
                 <StatusBar style="auto" />
                 <View style={styles.pageNavigator}>
-                    <TouchableOpacity onPress={() => this.props.navigation.navigate('SettingsScreen')}>
+                    <TouchableOpacity onPress={() => this.props.navigation.navigate('SettingsScreen', {callHome:this.checkSwitches.bind(this)})}>
                         <Image style={styles.pagesButton} source={require('../assets/settings.png')}/>
                     </TouchableOpacity>
                     <TouchableOpacity>
