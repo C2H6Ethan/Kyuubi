@@ -3,6 +3,7 @@ import React, { Component } from 'react';
 import { SafeAreaView, StyleSheet, Text, TouchableOpacity, View, Button, Image } from 'react-native';
 import Scrambo from 'scrambo';
 import AsyncStorage  from "@react-native-async-storage/async-storage";
+import moment from 'moment';
 
 var scrambo = new Scrambo();
 var scramble = scrambo.get(1);
@@ -35,10 +36,9 @@ export default class HomeScreen extends Component{
         }
     }
 
-    returnData = async (key) => {
+    storeData = async (key, value) => {
         try {
-            const value = await AsyncStorage.getItem(key);
-            return value;
+            await AsyncStorage.setItem(key, value);
         } 
         catch (error) {
             console.warn(error);
@@ -59,10 +59,31 @@ export default class HomeScreen extends Component{
         clearTimeout(this.timerTimout);
         this.setState({isTimerRunning: false, timerText: this.state.hiddentTimerText});
 
+        // save solve
+        var solveDate = moment().format();
+        var solveScramble = this.state.scrambleText;
+        var solveTime = this.state.hiddentTimerText;
+        var solve = {time: solveTime, scramble: solveScramble, date: solveDate};
+
+        //await AsyncStorage.removeItem("solves");
+
+        var solves = await AsyncStorage.getItem("solves");
+        if (solves == null ) {
+            var newSolves = {solves: [solve]};
+            await AsyncStorage.setItem("solves", JSON.stringify(newSolves));
+        }
+        else {
+            solves = JSON.parse(solves);
+            solves = solves['solves'];
+            solves.push(solve);
+            var newSolves = {solves : solves};
+            await AsyncStorage.setItem("solves", JSON.stringify(newSolves));
+        }
+
         // set new scramble
         var newScramble = scrambo.get(1);
         this.setState({scrambleText: newScramble});
-    
+
         }
         else
         {
@@ -70,7 +91,7 @@ export default class HomeScreen extends Component{
             {
                 this.setState({isTimerDisabled: true})
             }
-            else 
+            else if(this.props.navigation.getParam('isTimerDisabled') == false)
             {
                 this.setState({isTimerDisabled: false})
             }
@@ -137,7 +158,7 @@ export default class HomeScreen extends Component{
                     <TouchableOpacity>
                         <Image style={styles.pagesButton} source={require('../assets/home.png')}/>
                     </TouchableOpacity>
-                    <TouchableOpacity>
+                    <TouchableOpacity onPress={() => this.props.navigation.navigate('SolvesScreen')}>
                     <Image style={styles.pagesButton} source={require('../assets/graph.png')}/>
                     </TouchableOpacity>
                 </View>
