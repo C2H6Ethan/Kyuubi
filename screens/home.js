@@ -62,6 +62,10 @@ export default class HomeScreen extends Component{
         var ao12s = [];
         var ao100s = [];
 
+        var minAo5 = '-';
+        var minAo12 = '-';
+        var minAo100 = '-';
+
         solves.forEach(element => {
             times.push(Number(element['time']));
             means.push(Number(element['mean']));
@@ -71,7 +75,7 @@ export default class HomeScreen extends Component{
                     ao5s.push(Number(element['ao5']));
                 } 
 
-                this.setState({bestAo5: Math.min(...ao5s)})
+                minAo5 =  Math.min(...ao5s);
             }
             
             if (solves.length >= 12)
@@ -80,7 +84,7 @@ export default class HomeScreen extends Component{
                     ao12s.push(Number(element['ao12']));
                 } 
 
-                this.setState({bestAo12: Math.min(...ao12s)})
+                minAo12 = Math.min(...ao12s);
             }
 
             if (solves.length >= 100)
@@ -89,13 +93,13 @@ export default class HomeScreen extends Component{
                     ao100s.push(Number(element['ao100']));
                 }
 
-                this.setState({bestAo100: Math.min(...ao100s)})
+                minAo100 = Math.min(...ao100s);
             }
             
             
         });
 
-        this.setState({bestSolve: Math.min(...times), bestMean: Math.min(...means)})
+        this.setState({bestSolve: Math.min(...times), bestMean: Math.min(...means), bestAo5: minAo5, bestAo12: minAo12, bestAo100: minAo100})
     }
 
     checkSwitches = async () => {
