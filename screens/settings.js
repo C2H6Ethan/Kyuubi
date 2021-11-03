@@ -81,7 +81,7 @@ export default class SettingsScreen extends Component{
 
                 <View style={styles.pageNavigator}>
                     <TouchableOpacity>
-                        <Image style={styles.pagesButton} source={require('../assets/settings.png')}/>
+                        <Image style={styles.pagesButtonClicked} source={require('../assets/settings.png')}/>
                     </TouchableOpacity>
                     <TouchableOpacity onPress={() => this.props.navigation.navigate('HomeScreen', {isTimerDisabled: this.state.isTimerDisabled})}>
                         <Image style={styles.pagesButton} source={require('../assets/home.png')}/>
@@ -118,6 +118,10 @@ const styles = StyleSheet.create({
     pagesButton: {
         width: 25,
         height: 25,
+    },
+    pagesButtonClicked: {
+        width: 35,
+        height: 35,
     },
     settingWrapper: {
         flexDirection: 'row',
