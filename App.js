@@ -6,10 +6,17 @@ import { createStackNavigator } from 'react-navigation-stack';
 import { createAppContainer } from 'react-navigation';
 import HomeScreen from './screens/home';
 import SettingsScreen from './screens/settings';
-import SolvesScreen from './screens/solves'
+import SolvesScreen from './screens/solves';
 
 
 const screens = {
+  HomeScreen: {
+    screen: HomeScreen,
+      navigationOptions: {
+        headerShown: false,
+        gestureEnabled: false,
+      },
+  },
   HomeScreen: {
     screen: HomeScreen,
       navigationOptions: {

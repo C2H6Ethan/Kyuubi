@@ -1,12 +1,17 @@
 import { StatusBar } from 'expo-status-bar';
 import React, { Component } from 'react';
 import { SafeAreaView, StyleSheet, Text, TouchableOpacity, View, Button, Image } from 'react-native';
+import Cube from 'cubejs';
 import Scrambo from 'scrambo';
+import Square from '../components/Square';
 import AsyncStorage  from "@react-native-async-storage/async-storage";
 import moment from 'moment';
 
 var scrambo = new Scrambo();
+var cube = new Cube();
 var scramble = scrambo.get(1);
+cube.move(scramble.toString());
+var faces = (cube.asString()).split('')
 
 
 export default class HomeScreen extends Component{
@@ -32,6 +37,14 @@ export default class HomeScreen extends Component{
             bestAo5: '-',
             bestAo12: '-',
             bestAo100: '-',
+
+            uFace: faces.slice(0, 9),
+            rFace: faces.slice(9, 18),
+            fFace: faces.slice(18, 27),
+            dFace: faces.slice(27, 36),
+            lFace: faces.slice(36, 45),
+            bFace: faces.slice(45, 54),
+
         };
 
     }
@@ -40,6 +53,15 @@ export default class HomeScreen extends Component{
 
         this.displayAverages();
         
+    }
+
+    colorJSON = {
+        'U': 'white',
+        'R': 'red',
+        'F': 'green',
+        'D': 'yellow',
+        'L': 'orange',
+        'B': 'blue',
     }
 
     displayAverages = async () => {
@@ -224,9 +246,10 @@ export default class HomeScreen extends Component{
     
     handleNewScramble = () => {
         newScramble = scrambo.get(1);
-        this.setState({
-        scrambleText: newScramble[0]
-        })
+        cube.identity();
+        cube.move(newScramble[0].toString());
+        var faces = (cube.asString()).split('');
+        this.setState({scrambleText: newScramble[0], uFace: faces.slice(0, 9), rFace: faces.slice(9, 18), fFace: faces.slice(18, 27), dFace: faces.slice(27, 36), lFace: faces.slice(36, 45), bFace: faces.slice(45, 54),});
     }
     
     handleTimerPressIn = async () => {
@@ -261,7 +284,11 @@ export default class HomeScreen extends Component{
 
         // set new scramble
         var newScramble = scrambo.get(1);
-        this.setState({scrambleText: newScramble});
+        cube.identity();
+        cube.move(newScramble.toString());
+        var faces = (cube.asString()).split('')
+        this.setState({scrambleText: newScramble, uFace: faces.slice(0, 9), rFace: faces.slice(9, 18), fFace: faces.slice(18, 27), dFace: faces.slice(27, 36), lFace: faces.slice(36, 45), bFace: faces.slice(45, 54),});
+
 
         }
         else
@@ -334,21 +361,83 @@ export default class HomeScreen extends Component{
                 <StatusBar style="auto" />
 
                 <View style={styles.averages}>
-                    <View style={styles.currentAverages}>
-                        <Text>current: {this.state.currentSolve}</Text>
-                        <Text>mean: {this.state.mean}</Text>
-                        <Text>ao5: {this.state.ao5}</Text>
-                        <Text>ao12: {this.state.ao12}</Text>
-                        <Text>ao100: {this.state.ao100}</Text>
+                    <View>
+                        <Text style={styles.averagesText}>current: {this.state.currentSolve}</Text>
+                        <Text style={styles.averagesText}>mean: {this.state.mean}</Text>
+                        <Text style={styles.averagesText}>ao5: {this.state.ao5}</Text>
+                        <Text style={styles.averagesText}>ao12: {this.state.ao12}</Text>
+                        <Text style={styles.averagesText}>ao100: {this.state.ao100}</Text>
                     </View>
-                    <View style={styles.bestAverages}>
-                        <Text>best: {this.state.bestSolve}</Text>
-                        <Text>mean: {this.state.bestMean}</Text>
-                        <Text>ao5: {this.state.bestAo5}</Text>
-                        <Text>ao12: {this.state.bestAo12}</Text>
-                        <Text>ao100: {this.state.bestAo100}</Text>
+
+
+                    <View style={styles.scrambleImage}>
+                        <View style={styles.faces}>
+                        {
+                            this.state.uFace.map((item, index) =>{
+                            return (
+                                <Square color={this.colorJSON[item]}/>
+                            )
+                            })
+                        }
+                        </View>
+                        <View style={styles.middleFaces}>
+                        
+                            <View style={styles.faces}>
+                            {
+                                this.state.lFace.map((item, index) =>{
+                                return (
+                                    <Square color={this.colorJSON[item]}/>
+                                )
+                                })
+                            }
+                            </View>
+                            <View style={styles.faces}>
+                            {
+                                this.state.fFace.map((item, index) =>{
+                                return (
+                                    <Square color={this.colorJSON[item]}/>
+                                )
+                                })
+                            }
+                            </View>
+                            <View style={styles.faces}>
+                            {
+                                this.state.rFace.map((item, index) =>{
+                                return (
+                                    <Square color={this.colorJSON[item]}/>
+                                )
+                                })
+                            }
+                            </View>
+                            <View style={styles.faces}>
+                            {
+                                this.state.bFace.map((item, index) =>{
+                                return (
+                                    <Square color={this.colorJSON[item]}/>
+                                )
+                                })
+                            }
+                            </View>
+                        </View>
+                        <View style={styles.faces}>
+                        {
+                            this.state.dFace.map((item, index) =>{
+                            return (
+                                <Square color={this.colorJSON[item]}/>
+                            )
+                            })
+                        }
+                        </View>
                     </View>
-                    
+
+
+                    <View>
+                        <Text style={styles.averagesText}>best: {this.state.bestSolve}</Text>
+                        <Text style={styles.averagesText}>mean: {this.state.bestMean}</Text>
+                        <Text style={styles.averagesText}>ao5: {this.state.bestAo5}</Text>
+                        <Text style={styles.averagesText}>ao12: {this.state.bestAo12}</Text>
+                        <Text style={styles.averagesText}>ao100: {this.state.bestAo100}</Text>
+                    </View>
                 </View>
 
                 <View style={styles.pageNavigator}>
@@ -388,11 +477,11 @@ const styles = StyleSheet.create({
         width: '100%',
     },
     averages: {
-        justifyContent: 'space-around',
+        justifyContent: 'space-evenly',
         alignItems: 'center',
         bottom: 90,
         flexDirection: 'row',
-        width: 250,
+        width: '100%',
         
     },
     pageNavigator: {
@@ -419,5 +508,25 @@ const styles = StyleSheet.create({
     pagesButtonClicked: {
         width: 35,
         height: 35,
+    },
+    averagesText: {
+        fontSize: 10,
+    },
+    faces: {
+        flexDirection: 'row',
+        flexWrap: 1,
+        width: 36,
+        margin: 0.5,
+        right: 18,
+    },
+    middleFaces: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        justifyContent: "center",
+        left: 18,
+    },
+    scrambleImage: {
+        alignItems: 'center',
+        justifyContent: "center",
     },
 });
