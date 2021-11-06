@@ -75,53 +75,54 @@ export default class HomeScreen extends Component{
             solves.reverse();
             lastSolve = solves[0];
             this.setState({currentSolve: lastSolve['time'], mean: lastSolve['mean'], ao5: lastSolve['ao5'], ao12: lastSolve['ao12'], ao100: lastSolve['ao100']})
-        }
+        
 
-        //get best averages
-        var times = [];
-        var means = [];
-        var ao5s = [];
-        var ao12s = [];
-        var ao100s = [];
+            //get best averages
+            var times = [];
+            var means = [];
+            var ao5s = [];
+            var ao12s = [];
+            var ao100s = [];
 
-        var minAo5 = '-';
-        var minAo12 = '-';
-        var minAo100 = '-';
+            var minAo5 = '-';
+            var minAo12 = '-';
+            var minAo100 = '-';
 
-        solves.forEach(element => {
-            times.push(Number(element['time']));
-            means.push(Number(element['mean']));
-            if (solves.length >= 5)
-            {
-               if (! isNaN(element['ao5'])){
-                    ao5s.push(Number(element['ao5']));
-                } 
+            solves.forEach(element => {
+                times.push(Number(element['time']));
+                means.push(Number(element['mean']));
+                if (solves.length >= 5)
+                {
+                if (! isNaN(element['ao5'])){
+                        ao5s.push(Number(element['ao5']));
+                    } 
 
-                minAo5 =  Math.min(...ao5s);
-            }
-            
-            if (solves.length >= 12)
-            {
-               if (! isNaN(element['ao12'])){
-                    ao12s.push(Number(element['ao12']));
-                } 
+                    minAo5 =  Math.min(...ao5s);
+                }
+                
+                if (solves.length >= 12)
+                {
+                if (! isNaN(element['ao12'])){
+                        ao12s.push(Number(element['ao12']));
+                    } 
 
-                minAo12 = Math.min(...ao12s);
-            }
-
-            if (solves.length >= 100)
-            {
-                if (! isNaN(element['ao100'])){
-                    ao100s.push(Number(element['ao100']));
+                    minAo12 = Math.min(...ao12s);
                 }
 
-                minAo100 = Math.min(...ao100s);
-            }
-            
-            
-        });
+                if (solves.length >= 100)
+                {
+                    if (! isNaN(element['ao100'])){
+                        ao100s.push(Number(element['ao100']));
+                    }
 
-        this.setState({bestSolve: Math.min(...times), bestMean: Math.min(...means), bestAo5: minAo5, bestAo12: minAo12, bestAo100: minAo100})
+                    minAo100 = Math.min(...ao100s);
+                }
+                
+                
+            });
+
+            this.setState({bestSolve: Math.min(...times), bestMean: Math.min(...means), bestAo5: minAo5, bestAo12: minAo12, bestAo100: minAo100})
+        }
     }
 
     checkSwitches = async () => {
@@ -245,11 +246,13 @@ export default class HomeScreen extends Component{
     }
     
     handleNewScramble = () => {
-        newScramble = scrambo.get(1);
-        cube.identity();
-        cube.move(newScramble[0].toString());
-        var faces = (cube.asString()).split('');
-        this.setState({scrambleText: newScramble[0], uFace: faces.slice(0, 9), rFace: faces.slice(9, 18), fFace: faces.slice(18, 27), dFace: faces.slice(27, 36), lFace: faces.slice(36, 45), bFace: faces.slice(45, 54),});
+        if (!this.state.isTimerRunning){
+            newScramble = scrambo.get(1);
+            cube.identity();
+            cube.move(newScramble[0].toString());
+            var faces = (cube.asString()).split('');
+            this.setState({scrambleText: newScramble[0], uFace: faces.slice(0, 9), rFace: faces.slice(9, 18), fFace: faces.slice(18, 27), dFace: faces.slice(27, 36), lFace: faces.slice(36, 45), bFace: faces.slice(45, 54),});
+        }
     }
     
     handleTimerPressIn = async () => {
@@ -347,7 +350,6 @@ export default class HomeScreen extends Component{
     
         this.timerTimout = setTimeout(() => { this.handleStartTimer(); }, 10);
     }
-
     render(){
         const { navigate } = this.props.navigation;
         return (
