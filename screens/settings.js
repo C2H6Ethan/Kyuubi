@@ -86,7 +86,7 @@ export default class SettingsScreen extends Component{
                     <TouchableOpacity onPress={() => this.props.navigation.navigate('HomeScreen', {isTimerDisabled: this.state.isTimerDisabled})}>
                         <Image style={styles.pagesButton} source={require('../assets/home.png')}/>
                     </TouchableOpacity>
-                    <TouchableOpacity onPress={() => this.props.navigation.navigate('SolvesScreen')}>
+                    <TouchableOpacity onPress={() => this.props.navigation.navigate('SolvesScreen', {isTimerDisabled: this.state.isTimerDisabled})}>
                     <Image style={styles.pagesButton} source={require('../assets/graph.png')}/>
                     </TouchableOpacity>
                 </View>

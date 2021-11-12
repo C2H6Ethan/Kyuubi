@@ -17,13 +17,6 @@ const screens = {
         gestureEnabled: false,
       },
   },
-  HomeScreen: {
-    screen: HomeScreen,
-      navigationOptions: {
-        headerShown: false,
-        gestureEnabled: false,
-      },
-  },
   SettingsScreen: {
     screen: SettingsScreen,
       navigationOptions: {

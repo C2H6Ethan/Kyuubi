@@ -1,9 +1,10 @@
 import { StatusBar } from 'expo-status-bar';
 import React, { Component } from 'react';
-import { Modal, Pressable, SafeAreaView, StyleSheet, Text, TouchableOpacity, View, Button, Image, Switch, TargetComponent } from 'react-native';
+import {Modal, Pressable, SafeAreaView, StyleSheet, Text, TouchableOpacity, View, Button, Image, Switch, TargetComponent } from 'react-native';
 import  AsyncStorage  from "@react-native-async-storage/async-storage";
-import { ScrollView } from 'react-native-gesture-handler';
+import { ScrollView, TouchableWithoutFeedback } from 'react-native-gesture-handler';
 import moment from 'moment';
+import {Picker} from '@react-native-picker/picker';
 
 export default class SettingsScreen extends Component{
     constructor(props){
@@ -16,6 +17,8 @@ export default class SettingsScreen extends Component{
             modalDate: null,
             modalScramble: null,
             currentSolveIndex: null,
+            selectedValue: 'date',
+            isTimerDisabled: null,
         };
     }
 
@@ -25,23 +28,44 @@ export default class SettingsScreen extends Component{
         if (visible)
         {
             // set solve data
-            var solves = await AsyncStorage.getItem('solves');
-            solves = JSON.parse(solves);
-            solves = solves ['solves'];
-            var newIndex = (solves.length - 1) - index;
-            var solve = solves[newIndex];
-            this.setState({modalTime: solve['time'], modalDate: solve['date'], modalScramble: solve['scramble'], currentSolveIndex: index,});
+           var solves = this.state.solves;
+           var solve = solves[index];
+           this.setState({modalTime: solve['time'], modalDate: solve['date'], modalScramble: solve['scramble'],  modalCubeType: solve['cubeType'],currentSolveIndex: index,});
+    
         }
     }
-
     componentDidMount = async () => {
+
         var solves = await AsyncStorage.getItem('solves');
         if (solves != null){
             solves = JSON.parse(solves);
             solves = solves['solves'];
-            solves.reverse();
-            this.setState({solves: solves});
+
+            //filter solves with cube type
+            var cubeType = await AsyncStorage.getItem('selectedCube');
+            var filteredArray = []
+
+            solves.forEach(solve => {
+                if (solve['cubeType'] == cubeType){filteredArray.push(solve)}
+            });
+
+
+            filteredArray.reverse();
+            this.setState({solves: filteredArray});
         }
+        var filterItem = await AsyncStorage.getItem('filterItem');
+
+        var isTimerDisabled = await AsyncStorage.getItem('isTimerDisabled')
+        if (isTimerDisabled == 'true'){isTimerDisabled = true}
+        else {isTimerDisabled = false}
+
+        this.setState({isTimerDisabled: isTimerDisabled});
+
+        if (filterItem != null){
+            this.setState({selectedValue: filterItem});
+            this.setSelectedValue(filterItem);
+        }
+        
     }
 
     deleteSolve = async (index) => {
@@ -74,6 +98,37 @@ export default class SettingsScreen extends Component{
     
     }
 
+    setSelectedValue = async (itemValue) => {
+        this.setState({selectedValue: itemValue})
+        await AsyncStorage.setItem('filterItem', itemValue);
+
+        if (itemValue == 'time')
+        {
+            var filteredArray = this.state.solves.sort((a, b) => parseFloat(a.time) - parseFloat(b.time))
+            
+            this.setState({solves: filteredArray})
+        }
+        else if (itemValue == 'date')
+        {
+            var solves = await AsyncStorage.getItem('solves');
+            if (solves != null){
+                solves = JSON.parse(solves);
+                solves = solves['solves'];
+
+                //filter solves with cube type
+                var cubeType = await AsyncStorage.getItem('selectedCube');
+                var filteredArray = []
+
+                solves.forEach(solve => {
+                    if (solve['cubeType'] == cubeType){filteredArray.push(solve)}
+                });
+
+                filteredArray.reverse();
+                this.setState({solves: filteredArray});
+            }
+        }
+    }
+
 
     render(){
         const { navigate } = this.props.navigation;
@@ -86,32 +141,38 @@ export default class SettingsScreen extends Component{
           transparent={true}
           visible={modalVisible}
           onRequestClose={() => {
-            Alert.alert("Modal has been closed.");
             this.setModalVisible(!modalVisible);
           }}
         >
+          <TouchableOpacity activeOpacity={1} onPress={() => this.setModalVisible(!modalVisible)} style={{flex: 1,justifyContent: 'center',alignItems: 'center'}}>
+          <TouchableOpacity activeOpacity={1} style={{width: 375, height: 200}}>
           <View style={styles.centeredView}>
             <View style={styles.modalView}>
-              <Text style={styles.modalText}>{this.state.modalTime}</Text>
+              <Text style={styles.modalScrambleText}>{this.state.modalTime}</Text>
+              <Text style={styles.modalText}>{this.state.modalCubeType}</Text>
               <Text style={styles.modalText}>{this.state.modalScramble}</Text>
               <Text style={styles.modalText}>{this.state.modalDate}</Text>
-              <View style={styles.modalButtonsContainer}>
-                <Pressable
-                    style={[styles.button, styles.buttonClose]}
-                    onPress={() => this.setModalVisible(!modalVisible, null)}
-                >
-                    <Text style={styles.textStyle}>Hide</Text>
-                </Pressable>
                 <Pressable
                 style={[styles.button, styles.buttonClose]}
                 onPress={() => this.deleteSolve(this.state.currentSolveIndex)}
               >
                 <Text style={styles.textStyle}>Delete</Text>
               </Pressable>
-              </View>
             </View>
           </View>
+          </TouchableOpacity>
+          </TouchableOpacity>
         </Modal>
+
+                <Picker
+                itemStyle={{height: 44}}
+                    selectedValue={this.state.selectedValue}
+                    style={styles.filter}
+                    onValueChange={(itemValue, itemIndex) => this.setSelectedValue(itemValue)}
+                >
+                    <Picker.Item label="Date" value="date" />
+                    <Picker.Item label="Time" value="time" />
+                </Picker>
 
                 <ScrollView>
                     <View style={styles.timesContainer}>
@@ -224,6 +285,18 @@ const styles = StyleSheet.create({
     modalText: {
         marginBottom: 15,
         textAlign: "center"
-    }
+    },
+    modalScrambleText: {
+        fontSize: 35,
+        color: 'dodgerblue',
+        marginBottom: 15,
+        textAlign: "center"
+    },
+    filter: {
+        backgroundColor: 'dodgerblue',
+        borderRadius: 10,
+        marginBottom: 8,
+        width: '80%',
+    },
     
 });
