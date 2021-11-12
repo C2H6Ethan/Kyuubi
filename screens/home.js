@@ -10,8 +10,6 @@ import moment from 'moment';
 
 var scrambo = new Scrambo();
 var cube = new Cube();
-var scramble = scrambo.get(1);
-cube.move(scramble.toString());
 var faces = (cube.asString()).split('')
 
 
@@ -21,7 +19,7 @@ export default class HomeScreen extends Component{
         super(props);
 
         this.state = {
-            scrambleText: scramble,
+            scrambleText: '',
             timerText: '0.00',
             hiddentTimerText: '0.00',
             timerColor : 'black',
@@ -46,15 +44,19 @@ export default class HomeScreen extends Component{
             lFace: faces.slice(36, 45),
             bFace: faces.slice(45, 54),
 
+            selectedSession: {name: '3x3', scramble: '3x3'},
+            sessions: [],
+
+            selectedSessionIndex: 0,
+
             selectedCube: '3x3',
-            selectedCubeIndex: 0,
-            cubeTypes: ['3x3'],
             modalVisible: false,
             deleteModalVisible: false,
             modalCubeType: null,
 
             selectedScramble: '3x3',
-            scrambleTypes: ['2x2','3x3','4x4','5x5','7x7','Clock', 'Megaminx', 'Pyraminx', 'Skewb', 'Square-1'],
+            scrambleTypes: ['2x2','3x3','4x4','5x5','6x6','7x7','Clock', 'Megaminx', 'Pyraminx', 'Skewb', 'Square-1'],
+            scrambleCodes: ['222','333','444','555','666','777','clock', 'minx', 'pyram', 'skewv', 'sq1'],
 
         };
 
@@ -64,19 +66,56 @@ export default class HomeScreen extends Component{
 
         this.displayAverages();
 
-        this.getCubeTypes();
-        
+        this.getSessions();
+
+        this.getScramble();
     }
 
-    getCubeTypes = async () => {
-        var cubeTypes = await AsyncStorage.getItem('cubeTypes')
-        if(cubeTypes == null){
-            cubeTypes = ['3x3'];
-            await AsyncStorage.setItem('cubeTypes', cubeTypes.toString());
+    getScramble = async () => {
+        var selectedScramble = this.state.selectedSession['scramble'];
+        var index = this.state.scrambleTypes.findIndex(fruit => fruit === selectedScramble);
+        var scrambleCode = this.state.scrambleCodes[index];
+        var scramble = scrambo.type(scrambleCode).get(1);
+        this.setState({scrambleText: scramble});
+
+        if(scrambleCode == '333')
+        {
+            cube.identity();
+            cube.move(scramble.toString());
+            var faces = (cube.asString()).split('');
+
+            this.setState({
+                uFace: faces.slice(0, 9),
+                rFace: faces.slice(9, 18),
+                fFace: faces.slice(18, 27),
+                dFace: faces.slice(27, 36),
+                lFace: faces.slice(36, 45),
+                bFace: faces.slice(45, 54),
+            })
         }
         else{
-            cubeTypes = cubeTypes.split(',');
-            this.setState({cubeTypes: cubeTypes});
+            this.setState({
+                uFace: [],
+                rFace: [],
+                fFace: [],
+                dFace: [],
+                lFace: [],
+                bFace: [],
+            })
+        }
+    }
+
+    getSessions = async () => {
+        var sessions = await AsyncStorage.getItem('sessions')
+        if(sessions == null){
+            var session = {name: '3x3', scramble: '3x3'};
+            sessions = {sessions: [session]};
+            await AsyncStorage.setItem('sessions', JSON.stringify(sessions));
+        }
+        else{
+            sessions = JSON.parse(sessions);
+            sessions = sessions['sessions'];
+            this.setState({sessions: sessions});
         }
     }
 
@@ -281,17 +320,11 @@ export default class HomeScreen extends Component{
     }
     
     handleNewScramble = () => {
-        if (!this.state.isTimerRunning){
-            newScramble = scrambo.get(1);
-            cube.identity();
-            cube.move(newScramble[0].toString());
-            var faces = (cube.asString()).split('');
-            this.setState({scrambleText: newScramble[0], uFace: faces.slice(0, 9), rFace: faces.slice(9, 18), fFace: faces.slice(18, 27), dFace: faces.slice(27, 36), lFace: faces.slice(36, 45), bFace: faces.slice(45, 54),});
-        }
+        this.getScramble();
     }
     
     handleTimerPressIn = async () => {
-        // await AsyncStorage.clear();
+        //await AsyncStorage.clear();
         if (this.state.isTimerRunning)
         {
         // finish timer
@@ -322,11 +355,7 @@ export default class HomeScreen extends Component{
         // display new averages
         this.displayAverages();
         // set new scramble
-        var newScramble = scrambo.get(1);
-        cube.identity();
-        cube.move(newScramble.toString());
-        var faces = (cube.asString()).split('')
-        this.setState({scrambleText: newScramble, uFace: faces.slice(0, 9), rFace: faces.slice(9, 18), fFace: faces.slice(18, 27), dFace: faces.slice(27, 36), lFace: faces.slice(36, 45), bFace: faces.slice(45, 54),});
+        this.getScramble();
 
 
         }
@@ -388,11 +417,20 @@ export default class HomeScreen extends Component{
         this.timerTimout = setTimeout(() => { this.handleStartTimer(); }, 10);
     }
 
-    setSelectedCube = async (itemValue, itemIndex) => {
-        this.setState({selectedCube: itemValue, selectedCubeIndex: itemIndex})
+    setSelectedSession = async (itemValue, itemIndex) => {
         await AsyncStorage.setItem('selectedCube', itemValue);
 
+        //find scramble type
+        var scrambleType = null;
+        this.state.sessions.forEach(session => {
+            if(session['name'] == itemValue){scrambleType = session['scramble']};
+        });
+        var selectedSession = {name: itemValue, scramble: scrambleType};
+
+        this.setState({selectedCube: itemValue, selectedSessionIndex: itemIndex, selectedSession: selectedSession})
+
         this.displayAverages();
+        this.getScramble();
     }
 
     setSelectedScramble = async (itemValue, itemIndex) => {
@@ -404,7 +442,7 @@ export default class HomeScreen extends Component{
     }
 
     setDeleteModalVisible = (visible) => {
-        if (this.state.cubeTypes.length > 1){
+        if (this.state.sessions.length > 1){
             this.setState({ deleteModalVisible: visible });
         }
     }
@@ -414,20 +452,22 @@ export default class HomeScreen extends Component{
         this.setModalVisible(false)
 
         var textFromInput = this.state.modalCubeType;
-        var cubeTypes = this.state.cubeTypes;
-        cubeTypes.push(textFromInput);
-        await AsyncStorage.setItem('cubeTypes', cubeTypes.toString());
+        var sessions = this.state.sessions;
+        var session = {name: textFromInput, scramble: this.state.selectedScramble}
+        sessions.push(session);
+        sessions = {sessions: sessions}
+        await AsyncStorage.setItem('sessions', JSON.stringify(sessions));
 
     }
 
-    deleteCubeType = async () => {
+    deleteSession = async () => {
         this.setDeleteModalVisible(false);
-        var index = this.state.selectedCubeIndex;
-        var cubeTypes = this.state.cubeTypes;
-        var typeToDelete = cubeTypes[index];
-        cubeTypes.splice(index, 1);
-        var moveToType = cubeTypes[0];
-        this.setSelectedCube(moveToType, 0);
+        var index = this.state.selectedSessionIndex;
+        var sessions = this.state.sessions;
+        var sessionToDelete = sessions[index];
+        sessions.splice(index, 1);
+        var moveToSession = sessions[0];
+        this.setSelectedSession(moveToSession['name'], 0);
 
         // delete solves
         var solves = await AsyncStorage.getItem('solves');
@@ -438,7 +478,7 @@ export default class HomeScreen extends Component{
             //filter solves with cube type
             var filteredArray = []
             solves.forEach(solve => {
-                if (solve['cubeType'] != typeToDelete){filteredArray.push(solve)}
+                if (solve['cubeType'] != sessionToDelete['name']){filteredArray.push(solve)}
             });
 
             var newSolves = {solves: filteredArray};
@@ -452,12 +492,12 @@ export default class HomeScreen extends Component{
         const { modalVisible } = this.state;
         const { deleteModalVisible } = this.state;
 
-        let cubeTypes = this.state.cubeTypes.map( (s, i) => {
-            return <Picker.Item key={i} value={s} label={s} />
+        let cubeTypes = this.state.sessions.map( (s, i) => {
+            return <Picker.Item key={i} value={s['name']} label={s['name']} />
         });
 
-        let scrambleTypes = this.state.scrambleTypes.map( (s, i) => {
-            return <Picker.Item key={i} value={s} label={s} />
+        let scrambleCodes = this.state.scrambleCodes.map( (s, i) => {
+            return <Picker.Item key={i} value={this.state.scrambleTypes[i]} label={this.state.scrambleTypes[i]} />
         });
 
         return (
@@ -492,7 +532,7 @@ export default class HomeScreen extends Component{
                                 onValueChange={(itemValue, itemIndex) => this.setSelectedScramble(itemValue, itemIndex)}
 
                             >
-                                {scrambleTypes}
+                                {scrambleCodes}
                             </Picker>
                             <Pressable
                                 style={styles.modalButton}
@@ -520,7 +560,7 @@ export default class HomeScreen extends Component{
                             <Text>Are you sure you want to delete your {this.state.selectedCube} session and delete all its solves?</Text>
                             <Pressable
                                 style={styles.modalButton}
-                                onPress={() => this.deleteCubeType()}
+                                onPress={() => this.deleteSession()}
                             >
                                 <Text style={styles.textStyle}>Yes</Text>
                             </Pressable>
@@ -539,7 +579,7 @@ export default class HomeScreen extends Component{
                     itemStyle={{height: 44}}
                         selectedValue={this.state.selectedCube}
                         style={styles.selector}
-                        onValueChange={(itemValue, itemIndex) => this.setSelectedCube(itemValue, itemIndex)}
+                        onValueChange={(itemValue, itemIndex) => this.setSelectedSession(itemValue, itemIndex)}
 
                     >
                         {cubeTypes}
@@ -705,7 +745,7 @@ const styles = StyleSheet.create({
     },
     faces: {
         flexDirection: 'row',
-        flexWrap: 1,
+        flexWrap: 'wrap',
         width: 36,
         margin: 0.5,
         right: 18,
