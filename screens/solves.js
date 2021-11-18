@@ -19,6 +19,9 @@ export default class SettingsScreen extends Component{
             currentSolveIndex: null,
             selectedValue: 'date',
             isTimerDisabled: null,
+
+            primaryColor: '#303030',
+            accentColor: '#007fff',
         };
     }
 
@@ -55,11 +58,14 @@ export default class SettingsScreen extends Component{
         }
         var filterItem = await AsyncStorage.getItem('filterItem');
 
-        var isTimerDisabled = await AsyncStorage.getItem('isTimerDisabled')
-        if (isTimerDisabled == 'true'){isTimerDisabled = true}
-        else {isTimerDisabled = false}
-
-        this.setState({isTimerDisabled: isTimerDisabled});
+        if(this.props.navigation.getParam('isTimerDisabled'))
+        {
+            this.setState({isTimerDisabled: true})
+        }
+        else if(this.props.navigation.getParam('isTimerDisabled') == false)
+        {
+            this.setState({isTimerDisabled: false})
+        }
 
         if (filterItem != null){
             this.setState({selectedValue: filterItem});
@@ -199,7 +205,7 @@ export default class SettingsScreen extends Component{
 const styles = StyleSheet.create({
     container: {
         flex: 1,
-        backgroundColor: 'gray',
+        backgroundColor: '#303030',
         alignItems: 'center',
         width: "100%",
         justifyContent: "space-between"
@@ -214,7 +220,7 @@ const styles = StyleSheet.create({
         paddingHorizontal: 15,
         borderRadius: 60,
         width: 250,
-        backgroundColor: 'dodgerblue' 
+        backgroundColor: '#007fff' 
     },
     pagesButton: {
         width: 25,
@@ -223,7 +229,7 @@ const styles = StyleSheet.create({
     times: {
         alignItems: 'center',
         justifyContent: 'center',
-        backgroundColor: 'dodgerblue',
+        backgroundColor: '#007fff',
         width: 80,
         padding: 10,
         borderRadius: 60,
@@ -275,7 +281,7 @@ const styles = StyleSheet.create({
         elevation: 2,
     },
     buttonClose: {
-        backgroundColor: "dodgerblue",
+        backgroundColor: '#007fff',
     },
     textStyle: {
         color: "white",
@@ -288,12 +294,12 @@ const styles = StyleSheet.create({
     },
     modalScrambleText: {
         fontSize: 35,
-        color: 'dodgerblue',
+        color: '#007fff',
         marginBottom: 15,
         textAlign: "center"
     },
     filter: {
-        backgroundColor: 'dodgerblue',
+        backgroundColor: '#007fff',
         borderRadius: 10,
         marginBottom: 8,
         width: '80%',

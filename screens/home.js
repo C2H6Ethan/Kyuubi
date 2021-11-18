@@ -22,7 +22,7 @@ export default class HomeScreen extends Component{
             scrambleText: '',
             timerText: '0.00',
             hiddentTimerText: '0.00',
-            timerColor : 'black',
+            timerColor : 'white',
             isTimerRunning: false,
             isTimerDisabled: false,
             currentSolve: '-',
@@ -56,7 +56,10 @@ export default class HomeScreen extends Component{
 
             selectedScramble: '3x3',
             scrambleTypes: ['2x2','3x3','4x4','5x5','6x6','7x7','Clock', 'Megaminx', 'Pyraminx', 'Skewb', 'Square-1'],
-            scrambleCodes: ['222','333','444','555','666','777','clock', 'minx', 'pyram', 'skewv', 'sq1'],
+            scrambleCodes: ['222','333','444','555','666','777','clock', 'minx', 'pyram', 'skewb', 'sq1'],
+
+            primaryColor: '#303030',
+            accentColor: '#007fff',
 
         };
 
@@ -73,7 +76,7 @@ export default class HomeScreen extends Component{
 
     getScramble = async () => {
         var selectedScramble = this.state.selectedSession['scramble'];
-        var index = this.state.scrambleTypes.findIndex(fruit => fruit === selectedScramble);
+        var index = this.state.scrambleTypes.findIndex(scrambleType => scrambleType === selectedScramble);
         var scrambleCode = this.state.scrambleCodes[index];
         var scramble = scrambo.type(scrambleCode).get(1);
         this.setState({scrambleText: scramble});
@@ -383,7 +386,7 @@ export default class HomeScreen extends Component{
     handleTimerPressOut = async () => {
         clearTimeout(this.greenTimer);
         this.setState({
-        timerColor: 'black'
+        timerColor: 'white'
         })
     
         if (this.state.timerColor == 'lime'){
@@ -461,6 +464,7 @@ export default class HomeScreen extends Component{
     }
 
     deleteSession = async () => {
+        // delete sessions
         this.setDeleteModalVisible(false);
         var index = this.state.selectedSessionIndex;
         var sessions = this.state.sessions;
@@ -468,6 +472,9 @@ export default class HomeScreen extends Component{
         sessions.splice(index, 1);
         var moveToSession = sessions[0];
         this.setSelectedSession(moveToSession['name'], 0);
+
+        var newSessions = {sessions: sessions}
+        await AsyncStorage.setItem('sessions', JSON.stringify(newSessions));
 
         // delete solves
         var solves = await AsyncStorage.getItem('solves');
@@ -698,13 +705,14 @@ export default class HomeScreen extends Component{
 const styles = StyleSheet.create({
     container: {
         flex: 1,
-        backgroundColor: 'gray',
+        backgroundColor: '#303030',
         alignItems: 'center',
     },
     scramble: {
         padding: 15,
     },
     scrambleText: {
+        color: 'white',
     },
     timer: {
         flex: 1,
@@ -730,7 +738,7 @@ const styles = StyleSheet.create({
         paddingHorizontal: 15,
         borderRadius: 60,
         width: 250,
-        backgroundColor: 'dodgerblue' 
+        backgroundColor: '#007fff' 
     },
     pagesButton: {
         width: 25,
@@ -742,6 +750,7 @@ const styles = StyleSheet.create({
     },
     averagesText: {
         fontSize: 10,
+        color: 'white',
     },
     faces: {
         flexDirection: 'row',
@@ -761,12 +770,12 @@ const styles = StyleSheet.create({
         justifyContent: "center",
     },
     selector: {
-        backgroundColor: 'dodgerblue',
+        backgroundColor: '#007fff',
         borderRadius: 10,
         width: '70%'
     },
     scrambleSelector: {
-        backgroundColor: 'dodgerblue',
+        backgroundColor: '#007fff',
         borderRadius: 10,
         width: 200,
     },
@@ -776,7 +785,7 @@ const styles = StyleSheet.create({
         justifyContent: 'space-between',
     },
     addCubeTypeButton: {
-        backgroundColor: 'dodgerblue',
+        backgroundColor: '#007fff',
         alignItems: 'center',
         justifyContent: 'center',
         height: 30,
@@ -807,7 +816,7 @@ const styles = StyleSheet.create({
         elevation: 5,
     },
     modalButton: {
-        backgroundColor: 'dodgerblue',
+        backgroundColor: '#007fff',
         borderRadius: 20,
         padding: 10,
         elevation: 2,
