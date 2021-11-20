@@ -2,7 +2,6 @@ import { StatusBar } from 'expo-status-bar';
 import React, { Component } from 'react';
 import { Modal, SafeAreaView, StyleSheet, Text, TouchableOpacity, View, Button, Image, Switch } from 'react-native';
 import  AsyncStorage  from "@react-native-async-storage/async-storage";
-import { ColorWheel } from 'react-native-color-wheel';
 
 export default class SettingsScreen extends Component{
     constructor(props){
@@ -96,48 +95,6 @@ export default class SettingsScreen extends Component{
             <SafeAreaView style={[styles.container, {backgroundColor: this.state.backgroundColor}]}>
                 <StatusBar style="auto" />
 
-                <Modal
-                    animationType="slide"
-                    transparent={true}
-                    visible={backgroundModalVisible}
-                    onRequestClose={() => {
-                        this.setBackgroundModalVisible(!backgroundModalVisible);
-                    }}
-                    >
-                    <TouchableOpacity activeOpacity={1} onPress={() => this.setBackgroundModalVisible(!backgroundModalVisible)} style={{flex: 1,justifyContent: 'center',alignItems: 'center'}}>
-                    <TouchableOpacity activeOpacity={1} style={{width: '80%', height: '30%'}}>
-                        <View style={styles.modalView}>
-                            
-                        <ColorWheel
-                            initialColor="#ee0000"
-                            onColorChange={color => this.onBackgroundColorChange(color)}
-                            thumbStyle={{ height: 30, width: 30, borderRadius: 30}}
-                        />
-
-                        </View>
-                    </TouchableOpacity>
-                    </TouchableOpacity>
-                </Modal>
-
-                <Modal
-                    animationType="slide"
-                    transparent={true}
-                    visible={accentModalVisible}
-                    onRequestClose={() => {
-                        this.setAccentModalVisible(!accentModalVisible);
-                    }}
-                    >
-                    <TouchableOpacity activeOpacity={1} onPress={() => this.setAccentModalVisible(!accentModalVisible)} style={{flex: 1,justifyContent: 'center',alignItems: 'center'}}>
-                    <TouchableOpacity activeOpacity={1} style={{width: '80%', height: '30%'}}>
-                        <View style={styles.modalView}>
-                            
-                            
-
-                        </View>
-                    </TouchableOpacity>
-                    </TouchableOpacity>
-                </Modal>
-
                 <View style={styles.settings}>
                     <View style={styles.settingWrapper}>
                         <Text style={styles.settingText}>
@@ -150,20 +107,6 @@ export default class SettingsScreen extends Component{
                             onValueChange={this.toggleTimerDisableSwitch}
                             value={this.state.isTimerDisabled}
                         />
-                    </View>
-
-                    <View style={styles.settingWrapper}>
-                        <Text>
-                            Change backgroundColor Color
-                        </Text>
-                        <TouchableOpacity activeOpacity={1} onPress={() => this.setBackgroundModalVisible(!backgroundModalVisible)} style={[styles.backgroundColorSquare, {backgroundColor: this.state.backgroundColor}]}/>
-                    </View>
-
-                    <View style={styles.settingWrapper}>
-                        <Text>
-                            Change Accent Color
-                        </Text>
-                        <TouchableOpacity activeOpacity={1} onPress={() => this.setAccentModalVisible(!accentModalVisible)} style={[styles.accentColorSquare, {backgroundColor: this.state.accentColor}]}/>
                     </View>
                 </View>
 

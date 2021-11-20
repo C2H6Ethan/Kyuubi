@@ -61,6 +61,9 @@ export default class HomeScreen extends Component{
             primaryColor: '#303030',
             accentColor: '#007fff',
 
+            errorModalVisible: false,
+            errorModalText: '',
+
         };
 
     }
@@ -450,12 +453,29 @@ export default class HomeScreen extends Component{
         }
     }
 
+    setErrorModalVisible = (visible) => {
+        this.setState({ errorModalVisible: visible });
+    }
+
     addCubeType = async () => {
         Keyboard.dismiss();
         this.setModalVisible(false)
 
         var textFromInput = this.state.modalCubeType;
+
+        //check if session already exists
         var sessions = this.state.sessions;
+        var names = [];
+        sessions.forEach(session => {
+            names.push(session['name'])
+        });
+        if(names.includes(textFromInput))
+        {
+            //show error modal
+            this.setState({errorModalText: 'A Session with this name already exists!'})
+            this.setErrorModalVisible(true);
+            return
+        }
         var session = {name: textFromInput, scramble: this.state.selectedScramble}
         sessions.push(session);
         sessions = {sessions: sessions}
@@ -492,12 +512,13 @@ export default class HomeScreen extends Component{
             await AsyncStorage.setItem('solves', JSON.stringify(newSolves));
             await this.displayAverages();
         }
-    }    
+    }  
 
     render(){
         const { navigate } = this.props.navigation;
         const { modalVisible } = this.state;
         const { deleteModalVisible } = this.state;
+        const { errorModalVisible } = this.state;
 
         let cubeTypes = this.state.sessions.map( (s, i) => {
             return <Picker.Item key={i} value={s['name']} label={s['name']} />
@@ -520,7 +541,7 @@ export default class HomeScreen extends Component{
                     }}
                     >
                     <TouchableOpacity activeOpacity={1} onPress={() => this.setModalVisible(!modalVisible)} style={{flex: 1,justifyContent: 'center',alignItems: 'center'}}>
-                    <TouchableOpacity activeOpacity={1} style={{width: '80%', height: '30%'}}>
+                    <TouchableOpacity activeOpacity={1} style={{width: '60%', height: '40%'}}>
                     <KeyboardAvoidingView
                         style={styles.centeredView}
                         behavior={Platform.OS === "ios" ? "padding" : "height"}
@@ -533,7 +554,7 @@ export default class HomeScreen extends Component{
                                 onChangeText={ text => this.setState({modalCubeType: text})}
                             />
                             <Picker
-                            itemStyle={{height: 44}}
+                            itemStyle={{height: 100}}
                                 selectedValue={this.state.selectedScramble}
                                 style={styles.scrambleSelector}
                                 onValueChange={(itemValue, itemIndex) => this.setSelectedScramble(itemValue, itemIndex)}
@@ -576,6 +597,22 @@ export default class HomeScreen extends Component{
                     </TouchableOpacity>
                 </Modal>
 
+                <Modal
+                    animationType="slide"
+                    transparent={true}
+                    visible={errorModalVisible}
+                    onRequestClose={() => {
+                        this.setErrorModalVisible(!errorModalVisible);
+                    }}
+                    >
+                    <TouchableOpacity activeOpacity={1} onPress={() => this.setErrorModalVisible(!errorModalVisible)} style={{flex: 1,justifyContent: 'center',alignItems: 'center'}}>
+                    <TouchableOpacity activeOpacity={1} style={{width: '80%', height: '20%'}}>
+                        <View style={styles.modalView}>
+                            <Text style={{color: 'red'}}>{this.state.errorModalText}</Text>
+                        </View>
+                    </TouchableOpacity>
+                    </TouchableOpacity>
+                </Modal>
 
                 <View style={styles.cubeSelectionContainer}>
                     <TouchableOpacity activeOpacity={1} style={styles.addCubeTypeButton} onPress={() => this.setDeleteModalVisible(true)}>
@@ -777,7 +814,8 @@ const styles = StyleSheet.create({
     scrambleSelector: {
         backgroundColor: '#007fff',
         borderRadius: 10,
-        width: 200,
+        width: 150,
+
     },
     cubeSelectionContainer: {
         flexDirection: 'row',
