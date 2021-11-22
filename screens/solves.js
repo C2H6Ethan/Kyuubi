@@ -18,10 +18,11 @@ export default class SettingsScreen extends Component{
             modalScramble: null,
             currentSolveIndex: null,
             selectedValue: 'date',
-            isTimerDisabled: null,
 
             primaryColor: '#303030',
             accentColor: '#007fff',
+
+            solvesCount: 0,
         };
     }
 
@@ -52,20 +53,13 @@ export default class SettingsScreen extends Component{
                 if (solve['cubeType'] == cubeType){filteredArray.push(solve)}
             });
 
+            var solvesCount = filteredArray.length;
 
             filteredArray.reverse();
-            this.setState({solves: filteredArray});
+            this.setState({solves: filteredArray, solvesCount: solvesCount});
         }
         var filterItem = await AsyncStorage.getItem('filterItem');
 
-        if(this.props.navigation.getParam('isTimerDisabled'))
-        {
-            this.setState({isTimerDisabled: true})
-        }
-        else if(this.props.navigation.getParam('isTimerDisabled') == false)
-        {
-            this.setState({isTimerDisabled: false})
-        }
 
         if (filterItem != null){
             this.setState({selectedValue: filterItem});
@@ -77,7 +71,13 @@ export default class SettingsScreen extends Component{
     deleteSolve = async (index) => {
         let itemsCopy = this.state.solves;
         itemsCopy.splice(index, 1);
-        this.setState({solves: itemsCopy});
+
+
+        // change solves counter
+        var solvesCount = this.state.solvesCount;
+        solvesCount -= 1;
+
+        this.setState({solves: itemsCopy, solvesCount: solvesCount});
 
         var solves = await AsyncStorage.getItem('solves');
         solves = JSON.parse(solves);
@@ -180,6 +180,10 @@ export default class SettingsScreen extends Component{
                     <Picker.Item label="Time" value="time" />
                 </Picker>
 
+                <View>
+                    <Text style={styles.solvesCount}>{this.state.solvesCount} Solves</Text>
+                </View>
+
                 <ScrollView>
                     <View style={styles.timesContainer}>
                         {this.lapsList()}
@@ -190,7 +194,7 @@ export default class SettingsScreen extends Component{
                     <TouchableOpacity onPress={() => this.props.navigation.navigate('SettingsScreen')}>
                         <Image style={styles.pagesButton} source={require('../assets/settings.png')}/>
                     </TouchableOpacity>
-                    <TouchableOpacity onPress={() => this.props.navigation.navigate('HomeScreen', {isTimerDisabled: this.state.isTimerDisabled})}>
+                    <TouchableOpacity onPress={() => this.props.navigation.navigate('HomeScreen')}>
                         <Image style={styles.pagesButton} source={require('../assets/home.png')}/>
                     </TouchableOpacity>
                     <TouchableOpacity>
@@ -303,6 +307,9 @@ const styles = StyleSheet.create({
         borderRadius: 10,
         marginBottom: 8,
         width: '80%',
+    },
+    solvesCount: {
+        color: 'white'
     },
     
 });

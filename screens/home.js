@@ -367,11 +367,12 @@ export default class HomeScreen extends Component{
         }
         else
         {
-            if(this.props.navigation.getParam('isTimerDisabled'))
+            var isTimerDisabled = await AsyncStorage.getItem('isTimerDisabled');
+            if(isTimerDisabled == 'true')
             {
                 this.setState({isTimerDisabled: true})
             }
-            else if(this.props.navigation.getParam('isTimerDisabled') == false)
+            else if(isTimerDisabled == 'false')
             {
                 this.setState({isTimerDisabled: false})
             }

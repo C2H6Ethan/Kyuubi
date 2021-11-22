@@ -9,6 +9,7 @@ export default class SettingsScreen extends Component{
 
         this.state = {
             isTimerDisabled: false,
+            inspection: false,
 
             backgroundColor: '#303030',
             accentColor: '#007fff',
@@ -34,7 +35,7 @@ export default class SettingsScreen extends Component{
         
     }
 
-    toggleTimerDisableSwitch = async () => {
+    toggleTimerDisableSwitch = () => {
         if (this.state.isTimerDisabled)
         {
             this.setState({isTimerDisabled: false});
@@ -44,6 +45,19 @@ export default class SettingsScreen extends Component{
         {
             this.setState({isTimerDisabled: true})
             this.storeData("isTimerDisabled", "true")
+        }
+    }
+
+    ToggleInspectionSwitch = () => {
+        if (this.state.inspection)
+        {
+            this.setState({inspection: false});
+            this.storeData("inspection", "false")
+        }
+        else
+        {
+            this.setState({inspection: true})
+            this.storeData("inspection", "true")
         }
     }
 
@@ -108,6 +122,18 @@ export default class SettingsScreen extends Component{
                             value={this.state.isTimerDisabled}
                         />
                     </View>
+                    <View style={styles.settingWrapper}>
+                        <Text style={styles.settingText}>
+                            Enable Inspection
+                        </Text>
+                        <Switch style={styles.switch} 
+                            trackColor={{ false: "black", true: "lime" }}
+                            thumbColor={this.state.inspection ? "green" : "red"}
+                            ios_backgroundColor="#3e3e3e"
+                            onValueChange={this.ToggleInspectionSwitch}
+                            value={this.state.inspection}
+                        />
+                    </View>
                 </View>
 
 
@@ -115,10 +141,10 @@ export default class SettingsScreen extends Component{
                     <TouchableOpacity>
                         <Image style={styles.pagesButtonClicked} source={require('../assets/settings.png')}/>
                     </TouchableOpacity>
-                    <TouchableOpacity onPress={() => this.props.navigation.navigate('HomeScreen', {isTimerDisabled: this.state.isTimerDisabled})}>
+                    <TouchableOpacity onPress={() => this.props.navigation.navigate('HomeScreen')}>
                         <Image style={styles.pagesButton} source={require('../assets/home.png')}/>
                     </TouchableOpacity>
-                    <TouchableOpacity onPress={() => this.props.navigation.navigate('SolvesScreen', {isTimerDisabled: this.state.isTimerDisabled})}>
+                    <TouchableOpacity onPress={() => this.props.navigation.navigate('SolvesScreen')}>
                         <Image style={styles.pagesButton} source={require('../assets/graph.png')}/>
                     </TouchableOpacity>
                 </View>
