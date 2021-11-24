@@ -1,6 +1,6 @@
 import { StatusBar } from 'expo-status-bar';
 import React, { Component } from 'react';
-import { KeyboardAvoidingView ,TextInput, Pressable, Modal, SafeAreaView, StyleSheet, Text, TouchableOpacity, View, Button, Image, Keyboard } from 'react-native';
+import { KeyboardAvoidingView ,TextInput, Pressable, Modal, SafeAreaView, StyleSheet, Text, TouchableOpacity, View, Button, Image, Keyboard, Alert } from 'react-native';
 import {Picker} from '@react-native-picker/picker';
 import Cube from 'cubejs';
 import Scrambo from 'scrambo';
@@ -51,7 +51,6 @@ export default class HomeScreen extends Component{
 
             selectedCube: '3x3',
             modalVisible: false,
-            deleteModalVisible: false,
             modalCubeType: null,
 
             selectedScramble: '3x3',
@@ -61,13 +60,11 @@ export default class HomeScreen extends Component{
             primaryColor: '#303030',
             accentColor: '#007fff',
 
-            errorModalVisible: false,
-            errorModalText: '',
-
         };
 
     }
     componentDidMount = async() =>{
+
         this.checkSwitches();
 
         this.displayAverages();
@@ -448,15 +445,6 @@ export default class HomeScreen extends Component{
         this.setState({ modalVisible: visible });
     }
 
-    setDeleteModalVisible = (visible) => {
-        if (this.state.sessions.length > 1){
-            this.setState({ deleteModalVisible: visible });
-        }
-    }
-
-    setErrorModalVisible = (visible) => {
-        this.setState({ errorModalVisible: visible });
-    }
 
     addCubeType = async () => {
         Keyboard.dismiss();
@@ -473,8 +461,8 @@ export default class HomeScreen extends Component{
         if(names.includes(textFromInput))
         {
             //show error modal
-            this.setState({errorModalText: 'A Session with this name already exists!'})
-            this.setErrorModalVisible(true);
+            var errorText = 'A Session with this name already exists!'
+            this.errorAlert(errorText);
             return
         }
         var session = {name: textFromInput, scramble: this.state.selectedScramble}
@@ -485,8 +473,6 @@ export default class HomeScreen extends Component{
     }
 
     deleteSession = async () => {
-        // delete sessions
-        this.setDeleteModalVisible(false);
         var index = this.state.selectedSessionIndex;
         var sessions = this.state.sessions;
         var sessionToDelete = sessions[index];
@@ -513,13 +499,44 @@ export default class HomeScreen extends Component{
             await AsyncStorage.setItem('solves', JSON.stringify(newSolves));
             await this.displayAverages();
         }
-    }  
+    } 
+
+    deleteSessionAlert = () =>{
+        var sessions = this.state.sessions;
+        if (sessions.length > 1) {
+            Alert.alert(
+                "Session Deletion",
+                "Are you sure you want to delete your session",
+                [
+                    {
+                    text: "No",
+                    onPress: () => console.log("Cancel Pressed"),
+                    style: "cancel"
+                    },
+                    { text: "Yes", onPress: () => this.deleteSession() }
+                ]
+            );
+        }
+        else {
+            this.errorAlert("You must have at least 1 session");
+        }
+    }
+
+    errorAlert = (errorText) =>{
+        Alert.alert(
+            "Error",
+            errorText,
+            [
+                {
+                text: "Okay",
+                },
+            ]
+        );
+    }
 
     render(){
         const { navigate } = this.props.navigation;
         const { modalVisible } = this.state;
-        const { deleteModalVisible } = this.state;
-        const { errorModalVisible } = this.state;
 
         let cubeTypes = this.state.sessions.map( (s, i) => {
             return <Picker.Item key={i} value={s['name']} label={s['name']} />
@@ -575,48 +592,9 @@ export default class HomeScreen extends Component{
                     </TouchableOpacity>
                 </Modal>
 
-                <Modal
-                    animationType="slide"
-                    transparent={true}
-                    visible={deleteModalVisible}
-                    onRequestClose={() => {
-                        this.setDeleteModalVisible(!deleteModalVisible);
-                    }}
-                    >
-                    <TouchableOpacity activeOpacity={1} onPress={() => this.setDeleteModalVisible(!deleteModalVisible)} style={{flex: 1,justifyContent: 'center',alignItems: 'center'}}>
-                    <TouchableOpacity activeOpacity={1} style={{width: '80%', height: '20%'}}>
-                        <View style={styles.modalView}>
-                            <Text>Are you sure you want to delete your {this.state.selectedCube} session and delete all its solves?</Text>
-                            <Pressable
-                                style={styles.modalButton}
-                                onPress={() => this.deleteSession()}
-                            >
-                                <Text style={styles.textStyle}>Yes</Text>
-                            </Pressable>
-                        </View>
-                    </TouchableOpacity>
-                    </TouchableOpacity>
-                </Modal>
-
-                <Modal
-                    animationType="slide"
-                    transparent={true}
-                    visible={errorModalVisible}
-                    onRequestClose={() => {
-                        this.setErrorModalVisible(!errorModalVisible);
-                    }}
-                    >
-                    <TouchableOpacity activeOpacity={1} onPress={() => this.setErrorModalVisible(!errorModalVisible)} style={{flex: 1,justifyContent: 'center',alignItems: 'center'}}>
-                    <TouchableOpacity activeOpacity={1} style={{width: '80%', height: '20%'}}>
-                        <View style={styles.modalView}>
-                            <Text style={{color: 'red'}}>{this.state.errorModalText}</Text>
-                        </View>
-                    </TouchableOpacity>
-                    </TouchableOpacity>
-                </Modal>
 
                 <View style={styles.cubeSelectionContainer}>
-                    <TouchableOpacity activeOpacity={1} style={styles.addCubeTypeButton} onPress={() => this.setDeleteModalVisible(true)}>
+                    <TouchableOpacity activeOpacity={1} style={styles.addCubeTypeButton} onPress={() => this.deleteSessionAlert()}>
                         <Text>x</Text>
                     </TouchableOpacity>
 

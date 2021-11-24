@@ -70,6 +70,7 @@ export default class SettingsScreen extends Component{
 
     deleteSolve = async (index) => {
         let itemsCopy = this.state.solves;
+        var solveToDelete = itemsCopy[index];
         itemsCopy.splice(index, 1);
 
 
@@ -81,11 +82,19 @@ export default class SettingsScreen extends Component{
 
         var solves = await AsyncStorage.getItem('solves');
         solves = JSON.parse(solves);
-        solves = solves ['solves'];
-        var newIndex = (solves.length - 1) - index;
-        solves.splice(newIndex, 1);
-        var newSolves = {solves: solves};
-        await AsyncStorage.setItem('solves', JSON.stringify(newSolves));
+        solves = solves['solves'];
+
+        var newSolves = []
+        solves.forEach(solve => {
+            // if the solve doesn't match to solveToDelete add it to the new Array
+            if(!(solve['time'] == solveToDelete['time'] && solve['date'] == solveToDelete['date']))
+            {
+                newSolves.push(solve);
+            }
+        });
+
+        var solvesToSave = {solves: newSolves};
+        await AsyncStorage.setItem('solves', JSON.stringify(solvesToSave));
 
         this.setModalVisible(false, null);
     }
