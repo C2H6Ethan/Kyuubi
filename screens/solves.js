@@ -6,7 +6,12 @@ import { ScrollView, TouchableWithoutFeedback } from 'react-native-gesture-handl
 import moment from 'moment';
 import {Picker} from '@react-native-picker/picker';
 
-export default class SettingsScreen extends Component{
+import styled, { ThemeProvider } from 'styled-components/native'
+import { connect } from 'react-redux'
+import { bindActionCreators } from 'redux'
+import { switchTheme } from '../redux/actions'
+
+class SolvesScreen extends Component{
     constructor(props){
         super(props);
 
@@ -104,9 +109,9 @@ export default class SettingsScreen extends Component{
         if(this.state.solves.length > 0){
             return this.state.solves.map((data, index) => {
                 return (
-                    <TouchableOpacity key={index} style={styles.times} onPress={() => this.setModalVisible(true, index)}>
+                    <Times key={index} onPress={() => this.setModalVisible(true, index)}>
                       <Text>{data.time}</Text> 
-                    </TouchableOpacity>
+                    </Times>
                 )
               })
         }
@@ -149,104 +154,75 @@ export default class SettingsScreen extends Component{
         const { navigate } = this.props.navigation;
         const { modalVisible } = this.state;
         return (
-            <SafeAreaView style={styles.container}>
-
-        <Modal
-          animationType="slide"
-          transparent={true}
-          visible={modalVisible}
-          onRequestClose={() => {
-            this.setModalVisible(!modalVisible);
-          }}
-        >
-          <TouchableOpacity activeOpacity={1} onPress={() => this.setModalVisible(!modalVisible)} style={{flex: 1,justifyContent: 'center',alignItems: 'center'}}>
-          <TouchableOpacity activeOpacity={1} style={{width: 375, height: 200}}>
-          <View style={styles.centeredView}>
-            <View style={styles.modalView}>
-              <Text style={styles.modalScrambleText}>{this.state.modalTime}</Text>
-              <Text style={styles.modalText}>{this.state.modalCubeType}</Text>
-              <Text style={styles.modalText}>{this.state.modalScramble}</Text>
-              <Text style={styles.modalText}>{this.state.modalDate}</Text>
-                <Pressable
-                style={[styles.button, styles.buttonClose]}
-                onPress={() => this.deleteSolve(this.state.currentSolveIndex)}
-              >
-                <Text style={styles.textStyle}>Delete</Text>
-              </Pressable>
-            </View>
-          </View>
-          </TouchableOpacity>
-          </TouchableOpacity>
-        </Modal>
-
-                <Picker
-                itemStyle={{height: 44}}
-                    selectedValue={this.state.selectedValue}
-                    style={styles.filter}
-                    onValueChange={(itemValue, itemIndex) => this.setSelectedValue(itemValue)}
-                >
-                    <Picker.Item label="Date" value="date" />
-                    <Picker.Item label="Time" value="time" />
-                </Picker>
-
-                <View>
-                    <Text style={styles.solvesCount}>{this.state.solvesCount} Solves</Text>
-                </View>
-
-                <ScrollView>
-                    <View style={styles.timesContainer}>
-                        {this.lapsList()}
+            <ThemeProvider theme={this.props.theme}>
+                <Container>
+                    <Modal
+                    animationType="slide"
+                    transparent={true}
+                    visible={modalVisible}
+                    onRequestClose={() => {
+                        this.setModalVisible(!modalVisible);
+                    }}
+                    >
+                    <TouchableOpacity activeOpacity={1} onPress={() => this.setModalVisible(!modalVisible)} style={{flex: 1,justifyContent: 'center',alignItems: 'center'}}>
+                    <TouchableOpacity activeOpacity={1} style={{width: 375, height: 200}}>
+                    <View style={styles.centeredView}>
+                        <ModalView>
+                        <ModalScrambleText>{this.state.modalTime}</ModalScrambleText>
+                        <ModalText>{this.state.modalCubeType}</ModalText>
+                        <ModalText>{this.state.modalScramble}</ModalText>
+                        <ModalText>{this.state.modalDate}</ModalText>
+                            <ButtonClose
+                            onPress={() => this.deleteSolve(this.state.currentSolveIndex)}
+                        >
+                            <TextStyle>Delete</TextStyle>
+                        </ButtonClose>
+                        </ModalView>
                     </View>
-                </ScrollView>
-                
-                <View style={styles.pageNavigator}>
-                    <TouchableOpacity onPress={() => this.props.navigation.navigate('SettingsScreen')}>
-                        <Image style={styles.pagesButton} source={require('../assets/settings.png')}/>
                     </TouchableOpacity>
-                    <TouchableOpacity onPress={() => this.props.navigation.navigate('HomeScreen')}>
-                        <Image style={styles.pagesButton} source={require('../assets/home.png')}/>
                     </TouchableOpacity>
-                    <TouchableOpacity>
-                    <Image style={styles.pagesButtonClicked} source={require('../assets/graph.png')}/>
-                    </TouchableOpacity>
-                </View>
-            </SafeAreaView>
+                    </Modal>
+
+                            <Filter
+                            itemStyle={{height: 44}}
+                                selectedValue={this.state.selectedValue}
+                                onValueChange={(itemValue, itemIndex) => this.setSelectedValue(itemValue)}
+                            >
+                                <Picker.Item label="Date" value="date" />
+                                <Picker.Item label="Time" value="time" />
+                            </Filter>
+
+                            <View>
+                                <SolvesCount>{this.state.solvesCount} Solves</SolvesCount>
+                            </View>
+
+                            <ScrollView>
+                                <View style={styles.timesContainer}>
+                                    {this.lapsList()}
+                                </View>
+                            </ScrollView>
+                            
+                            <PageNavigator>
+                                <TouchableOpacity onPress={() => this.props.navigation.navigate('SettingsScreen')}>
+                                    <Image style={styles.pagesButton} source={require('../assets/settings.png')}/>
+                                </TouchableOpacity>
+                                <TouchableOpacity onPress={() => this.props.navigation.navigate('HomeScreen')}>
+                                    <Image style={styles.pagesButton} source={require('../assets/home.png')}/>
+                                </TouchableOpacity>
+                                <TouchableOpacity>
+                                <Image style={styles.pagesButtonClicked} source={require('../assets/graph.png')}/>
+                                </TouchableOpacity>
+                            </PageNavigator>
+                        </Container>
+            </ThemeProvider>
         )
     }
 }
 
 const styles = StyleSheet.create({
-    container: {
-        flex: 1,
-        backgroundColor: '#303030',
-        alignItems: 'center',
-        width: "100%",
-        justifyContent: "space-between"
-    },
-    pageNavigator: {
-        position: 'absolute',
-        bottom: 50,
-        flexDirection: 'row',
-        justifyContent: 'space-around',
-        alignItems: 'center',
-        paddingVertical: 15,
-        paddingHorizontal: 15,
-        borderRadius: 60,
-        width: 250,
-        backgroundColor: '#007fff' 
-    },
     pagesButton: {
         width: 25,
         height: 25,
-    },
-    times: {
-        alignItems: 'center',
-        justifyContent: 'center',
-        backgroundColor: '#007fff',
-        width: 80,
-        padding: 10,
-        borderRadius: 60,
-        margin: 10,
     },
     timesContainer: {
         alignItems: 'flex-start',
@@ -260,28 +236,11 @@ const styles = StyleSheet.create({
         width: 35,
         height: 35,
     },
-
-
     centeredView: {
         flex: 1,
         justifyContent: "center",
         alignItems: "center",
         marginTop: 22
-    },
-    modalView: {
-        margin: 20,
-        backgroundColor: "#303030",
-        borderRadius: 20,
-        padding: 35,
-        alignItems: "center",
-        shadowColor: "#000",
-        shadowOffset: {
-            width: 0,
-            height: 2
-        },
-        shadowOpacity: 0.25,
-        shadowRadius: 4,
-        elevation: 5
     },
     modalButtonsContainer: {
         width: '50%',
@@ -293,33 +252,102 @@ const styles = StyleSheet.create({
         padding: 10,
         elevation: 2,
     },
-    buttonClose: {
-        backgroundColor: '#007fff',
-    },
-    textStyle: {
-        color: "white",
-        fontWeight: "bold",
-        textAlign: "center"
-    },
-    modalText: {
-        marginBottom: 15,
-        textAlign: "center",
-        color: 'white'
-    },
-    modalScrambleText: {
-        fontSize: 35,
-        color: '#007fff',
-        marginBottom: 15,
-        textAlign: "center"
-    },
     filter: {
         backgroundColor: '#007fff',
         borderRadius: 10,
         marginBottom: 8,
         width: '80%',
     },
-    solvesCount: {
-        color: 'white'
-    },
     
 });
+
+const Container = styled.SafeAreaView`
+  flex: 1;
+  background-color: ${props => props.theme.PRIMARY_BACKGROUND_COLOR};
+  justify-content: center;
+  align-items: center;
+`
+
+const PageNavigator = styled.View`
+    position: absolute;
+    bottom: 50px;
+    flex-direction: row;
+    justify-content: space-around;
+    align-items: center;
+    padding-vertical: 15px;
+    padding-horizontal: 15px;
+    border-radius: 60px;
+    width: 250px;
+    backgroundColor: ${props => props.theme.SECONDARY_BACKGROUND_COLOR};
+`
+
+const Times = styled.TouchableOpacity`
+    align-items: center;
+    justify-content: center;
+    background-color: ${props => props.theme.SECONDARY_BACKGROUND_COLOR};
+    width: 80px;
+    padding: 10px;
+    borderRadius: 60px;
+    margin: 10px;
+`
+
+const SolvesCount = styled.Text`
+    color: ${props => props.theme.PRIMARY_TEXT_COLOR};
+`
+
+const ModalView = styled.View`
+    flex: 1;
+    backgroundColor: ${props => props.theme.PRIMARY_BACKGROUND_COLOR};
+    borderRadius: 20px;
+    padding: 35px;
+    alignItems: center;
+    justifyContent: space-around;
+    shadowColor: #000;
+    shadowOpacity: 0.25;
+    shadowRadius: 4px;
+    elevation: 5;
+`
+
+const ButtonClose = styled.Pressable`
+    backgroundColor: ${props => props.theme.SECONDARY_BACKGROUND_COLOR};
+    borderRadius: 20px;
+    padding: 10px;
+    elevation: 2;
+`
+
+const TextStyle = styled.Text`
+    color: ${props => props.theme.SECONDARY_TEXT_COLOR};
+    fontWeight: bold;
+    textAlign: center;
+`
+const ModalText = styled.Text`
+    color: ${props => props.theme.PRIMARY_TEXT_COLOR};
+    text-align: center;
+    margin-bottom: 15px
+`
+const ModalScrambleText = styled.Text`
+    color: ${props => props.theme.SECONDARY_BACKGROUND_COLOR};
+    margin-bottom: 15px;
+    text-align: center;
+    font-size: 35px;
+`
+
+const Filter = styled.Picker`
+    backgroundColor: ${props => props.theme.SECONDARY_BACKGROUND_COLOR};
+    borderRadius: 10px;
+    marginBottom: 8px;
+    width: 80%;
+`
+
+const mapStateToProps = state => ({
+    theme: state.themeReducer.theme
+  })
+  
+  const mapDispatchToProps = dispatch => ({
+    switchTheme: bindActionCreators(switchTheme, dispatch)
+  })
+  
+  export default connect(
+    mapStateToProps,
+    mapDispatchToProps
+  )(SolvesScreen)

@@ -158,7 +158,7 @@ class SettingsScreen extends Component{
                                     </TouchableOpacity>
                                     <TouchableOpacity activeOpacity={1} style={styles.theme} onPress={() => this.switchTheme('light')}>
                                         <View style={{backgroundColor: '#FFFFFF', width: 50, height: 30, borderWidth: 2, borderColor: this.state.lightThemeBorder}}></View>
-                                        <ModalText>Light</ModalText>
+                                        <ModalText>Liam</ModalText>
                                     </TouchableOpacity>
                                 </View>
 
