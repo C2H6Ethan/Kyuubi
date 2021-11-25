@@ -19,3 +19,10 @@ export const defaultTheme = {
     PRIMARY_TEXT_COLOR: '#ffffff',
     SECONDARY_TEXT_COLOR: '#000000',
   }
+export const redTheme = {
+  mode: 'dark',
+  PRIMARY_BACKGROUND_COLOR: '#750000',
+  SECONDARY_BACKGROUND_COLOR: '#FF2400',
+  PRIMARY_TEXT_COLOR: '#000000',
+  SECONDARY_TEXT_COLOR: '#000000',
+}

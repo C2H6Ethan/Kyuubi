@@ -7,7 +7,7 @@ import styled, { ThemeProvider } from 'styled-components/native'
 import { connect } from 'react-redux'
 import { bindActionCreators } from 'redux'
 import { switchTheme } from '../redux/actions'
-import { darkTheme, lightTheme, defaultTheme } from '../styles/theme'
+import { darkTheme, lightTheme, defaultTheme, redTheme } from '../styles/theme'
 
 class SettingsScreen extends Component{
     constructor(props){
@@ -21,6 +21,7 @@ class SettingsScreen extends Component{
             defaultThemeBorder: '#007fff',
             darkThemeBorder: '#000000',
             lightThemeBorder: '#FFFFFF',
+            redThemeBorder: '#750000',
 
             picker: null,
         };
@@ -45,26 +46,35 @@ class SettingsScreen extends Component{
             case 'light':
                 this.setState({currentTheme: '#FFFFFF', lightThemeBorder: 'red'});
               break;
+            case 'red':
+                this.setState({currentTheme: '#750000', redThemeBorder: 'red'});
+              break;
             default:
                 this.setState({currentTheme: '#007fff', defaultThemeBorder: 'red'});
         }
     }
 
     switchTheme = async (theme) => {
+        this.setState({darkThemeBorder: '#000000', lightThemeBorder: '#FFFFFF', defaultThemeBorder: '#007fff', redThemeBorder: '#750000'});
         switch(theme) {
             case 'dark':
               this.props.switchTheme(darkTheme);
-              this.setState({currentTheme: '#000000', darkThemeBorder: 'red', lightThemeBorder: '#FFFFFF', defaultThemeBorder: '#007fff'});
+              this.setState({currentTheme: '#000000', darkThemeBorder: 'red'});
               this.storeData('theme', 'dark');
               break;
             case 'light':
                 this.props.switchTheme(lightTheme);
-                this.setState({currentTheme: '#FFFFFF', darkThemeBorder: '#000000', lightThemeBorder: 'red', defaultThemeBorder: '#007fff'});
+                this.setState({currentTheme: '#FFFFFF', lightThemeBorder: 'red',});
                 this.storeData('theme', 'light');
+              break;
+            case 'red':
+                this.props.switchTheme(redTheme);
+                this.setState({currentTheme: '#750000', redThemeBorder: 'red'});
+                this.storeData('theme', 'red');
               break;
             default:
                 this.props.switchTheme(defaultTheme);
-                this.setState({currentTheme: '#007fff', darkThemeBorder: '#000000', lightThemeBorder: '#FFFFFF', defaultThemeBorder: 'red'});
+                this.setState({currentTheme: '#007fff', defaultThemeBorder: 'red'});
                 this.storeData('theme', 'default');
         }
         this.setThemeModalVisible(false);
@@ -159,6 +169,10 @@ class SettingsScreen extends Component{
                                     <TouchableOpacity activeOpacity={1} style={styles.theme} onPress={() => this.switchTheme('light')}>
                                         <View style={{backgroundColor: '#FFFFFF', width: 50, height: 30, borderWidth: 2, borderColor: this.state.lightThemeBorder}}></View>
                                         <ModalText>Light</ModalText>
+                                    </TouchableOpacity>
+                                    <TouchableOpacity activeOpacity={1} style={styles.theme} onPress={() => this.switchTheme('red')}>
+                                        <View style={{backgroundColor: '#750000', width: 50, height: 30, borderWidth: 2, borderColor: this.state.redThemeBorder}}></View>
+                                        <ModalText>Red</ModalText>
                                     </TouchableOpacity>
                                 </View>
 
