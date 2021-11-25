@@ -165,7 +165,7 @@ class SolvesScreen extends Component{
                     }}
                     >
                     <TouchableOpacity activeOpacity={1} onPress={() => this.setModalVisible(!modalVisible)} style={{flex: 1,justifyContent: 'center',alignItems: 'center'}}>
-                    <TouchableOpacity activeOpacity={1} style={{width: 375, height: 200}}>
+                    <TouchableOpacity activeOpacity={1} style={{width: 375, height: 250}}>
                     <View style={styles.centeredView}>
                         <ModalView>
                         <ModalScrambleText>{this.state.modalTime}</ModalScrambleText>
@@ -323,7 +323,8 @@ const TextStyle = styled.Text`
 const ModalText = styled.Text`
     color: ${props => props.theme.PRIMARY_TEXT_COLOR};
     text-align: center;
-    margin-bottom: 15px
+    margin-bottom: 15px;
+
 `
 const ModalScrambleText = styled.Text`
     color: ${props => props.theme.SECONDARY_BACKGROUND_COLOR};

@@ -26,8 +26,10 @@ class HomeScreen extends Component{
         this.state = {
             scrambleText: '',
             timerText: '0.00',
+            timerStyle: {},
             hiddentTimerText: '0.00',
             timerColor: props.theme.PRIMARY_TEXT_COLOR,
+            originalTimerColor: props.theme.PRIMARY_TEXT_COLOR,
             isTimerRunning: false,
             isTimerDisabled: false,
             currentSolve: '-',
@@ -62,14 +64,10 @@ class HomeScreen extends Component{
             scrambleTypes: ['2x2','3x3','4x4','5x5','6x6','7x7','Clock', 'Megaminx', 'Pyraminx', 'Skewb', 'Square-1'],
             scrambleCodes: ['222','333','444','555','666','777','clock', 'minx', 'pyram', 'skewb', 'sq1'],
 
-            primaryColor: '#303030',
-            accentColor: '#007fff',
-
         };
 
     }
     componentDidMount = async() =>{
-
         this.getTheme();
 
         this.checkSwitches();
@@ -139,6 +137,8 @@ class HomeScreen extends Component{
             var session = {name: '3x3', scramble: '3x3'};
             sessions = {sessions: [session]};
             await AsyncStorage.setItem('sessions', JSON.stringify(sessions));
+            var sessionArray = [session];
+            this.setState({sessions: sessionArray});
         }
         else{
             sessions = JSON.parse(sessions);
@@ -352,7 +352,6 @@ class HomeScreen extends Component{
     }
     
     handleTimerPressIn = async () => {
-        //await AsyncStorage.clear();
         if (this.state.isTimerRunning)
         {
         // finish timer
@@ -385,7 +384,7 @@ class HomeScreen extends Component{
         // set new scramble
         this.getScramble();
 
-
+        this.setState({timerStyle: {}});
         }
         else
         {
@@ -399,10 +398,8 @@ class HomeScreen extends Component{
                 this.setState({isTimerDisabled: false})
             }
             
-            this.setState({ timerColor: 'red'});
-            this.greenTimer = setTimeout(() => { this.setState({timerColor: 'lime'}) }, 250);
-
-            //await AsyncStorage.removeItem('solves');
+            this.setState({timerStyle: { color: 'red'}});
+            this.greenTimer = setTimeout(() => { this.setState({timerStyle: {color: 'lime'}}) }, 250);
 
         }
     
@@ -411,11 +408,9 @@ class HomeScreen extends Component{
     
     handleTimerPressOut = async () => {
         clearTimeout(this.greenTimer);
-        this.setState({
-        timerColor: 'white'
-        })
+        this.setState({timerStyle:{}})
     
-        if (this.state.timerColor == 'lime'){
+        if (this.state.timerStyle['color'] == 'lime'){
         // start timer
         this.setState({isTimerRunning: true})
         
@@ -477,23 +472,28 @@ class HomeScreen extends Component{
 
         var textFromInput = this.state.modalCubeType;
 
-        //check if session already exists
-        var sessions = this.state.sessions;
-        var names = [];
-        sessions.forEach(session => {
-            names.push(session['name'])
-        });
-        if(names.includes(textFromInput))
-        {
-            //show error modal
-            var errorText = 'A Session with this name already exists!'
-            this.errorAlert(errorText);
-            return
+        if(textFromInput == null){this.errorAlert("No session name was provided!")}
+        else{
+            //check if session already exists
+            var sessions = this.state.sessions;
+            var names = [];
+            sessions.forEach(session => {
+                names.push(session['name'])
+            });
+            if(names.includes(textFromInput))
+            {
+                //show error modal
+                var errorText = 'A Session with this name already exists!'
+                this.errorAlert(errorText);
+                return
+            }
+            var session = {name: textFromInput, scramble: this.state.selectedScramble}
+            sessions.push(session);
+            sessions = {sessions: sessions}
+            await AsyncStorage.setItem('sessions', JSON.stringify(sessions));
         }
-        var session = {name: textFromInput, scramble: this.state.selectedScramble}
-        sessions.push(session);
-        sessions = {sessions: sessions}
-        await AsyncStorage.setItem('sessions', JSON.stringify(sessions));
+
+        
 
     }
 
@@ -638,7 +638,7 @@ class HomeScreen extends Component{
                         <SrambleText>{this.state.scrambleText}</SrambleText>
                     </TouchableOpacity>
                     <TouchableOpacity activeOpacity={1} style={styles.timer} onPressIn={this.handleTimerPressIn} onPressOut={this.handleTimerPressOut}>
-                        <TimerText>{this.state.timerText}</TimerText>
+                        <TimerText style={this.state.timerStyle}>{this.state.timerText}</TimerText>
                     </TouchableOpacity>
                     <StatusBar style="auto" />
 
