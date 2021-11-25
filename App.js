@@ -8,6 +8,16 @@ import HomeScreen from './screens/home';
 import SettingsScreen from './screens/settings';
 import SolvesScreen from './screens/solves';
 
+import { Provider } from 'react-redux'
+import { createStore, applyMiddleware, combineReducers } from 'redux'
+import thunk from 'redux-thunk'
+import themeReducer from './redux/themeReducer'
+
+const store = createStore(
+  combineReducers({ themeReducer }),
+  applyMiddleware(thunk)
+)
+
 
 const screens = {
   HomeScreen: {
@@ -41,6 +51,11 @@ const NavigationApp = createAppContainer(HomeStack);
 export default class App extends Component {
   
   render(){
-    return <NavigationApp/>;
+    return(
+      <Provider store={store}>
+        <NavigationApp/>
+      </Provider>
+      
+    ) 
   }
 }

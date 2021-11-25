@@ -3,27 +3,28 @@ import React, { Component } from 'react';
 import { Modal, SafeAreaView, StyleSheet, Text, TouchableOpacity, View, Button, Image, Switch } from 'react-native';
 import  AsyncStorage  from "@react-native-async-storage/async-storage";
 
-export default class SettingsScreen extends Component{
+import styled, { ThemeProvider } from 'styled-components/native'
+import { connect } from 'react-redux'
+import { bindActionCreators } from 'redux'
+import { switchTheme } from '../redux/actions'
+import { darkTheme, lightTheme, defaultTheme } from '../styles/theme'
+
+class SettingsScreen extends Component{
     constructor(props){
         super(props);
 
         this.state = {
             isTimerDisabled: false,
-            inspection: false,
 
-            backgroundColor: '#303030',
-            accentColor: '#007fff',
-            
-            defaultBackgroundColor: '#303030',
-            defaultAccentColor: '#007fff',
-
-            backgroundModalVisible: false,
-            accentModalVisible: false,
+            currentTheme: '#007fff',
+            themeModalVisible: false,
+            defaultThemeBorder: '#007fff',
+            darkThemeBorder: '#000000',
+            lightThemeBorder: '#FFFFFF',
 
             picker: null,
         };
 
-        this._loadToggles();
     }
 
     _loadToggles = async () => {
@@ -31,8 +32,48 @@ export default class SettingsScreen extends Component{
         if (value == "true") { this.setState({ isTimerDisabled: true }); }
     }
 
-    componentWillUnmount(){
+    getTheme = async () => {
+        var theme = await AsyncStorage.getItem("theme");
+        if(theme == null){
+            theme = 'default'
+        }
         
+        switch(theme) {
+            case 'dark':
+              this.setState({currentTheme: '#000000', darkThemeBorder: 'red'});
+              break;
+            case 'light':
+                this.setState({currentTheme: '#FFFFFF', lightThemeBorder: 'red'});
+              break;
+            default:
+                this.setState({currentTheme: '#007fff', defaultThemeBorder: 'red'});
+        }
+    }
+
+    switchTheme = async (theme) => {
+        switch(theme) {
+            case 'dark':
+              this.props.switchTheme(darkTheme);
+              this.setState({currentTheme: '#000000', darkThemeBorder: 'red', lightThemeBorder: '#FFFFFF', defaultThemeBorder: '#007fff'});
+              this.storeData('theme', 'dark');
+              break;
+            case 'light':
+                this.props.switchTheme(lightTheme);
+                this.setState({currentTheme: '#FFFFFF', darkThemeBorder: '#000000', lightThemeBorder: 'red', defaultThemeBorder: '#007fff'});
+                this.storeData('theme', 'light');
+              break;
+            default:
+                this.props.switchTheme(defaultTheme);
+                this.setState({currentTheme: '#007fff', darkThemeBorder: '#000000', lightThemeBorder: '#FFFFFF', defaultThemeBorder: 'red'});
+                this.storeData('theme', 'default');
+        }
+        this.setThemeModalVisible(false);
+    }
+
+    componentDidMount(){
+        this._loadToggles();
+
+        this.getTheme();
     }
 
     toggleTimerDisableSwitch = () => {
@@ -45,19 +86,6 @@ export default class SettingsScreen extends Component{
         {
             this.setState({isTimerDisabled: true})
             this.storeData("isTimerDisabled", "true")
-        }
-    }
-
-    ToggleInspectionSwitch = () => {
-        if (this.state.inspection)
-        {
-            this.setState({inspection: false});
-            this.storeData("inspection", "false")
-        }
-        else
-        {
-            this.setState({inspection: true})
-            this.storeData("inspection", "true")
         }
     }
 
@@ -92,85 +120,97 @@ export default class SettingsScreen extends Component{
         this.setState({backgroundColor: newColor});
     }
 
-    setAccentModalVisible = (visible, index) => {
-        this.setState({ accentModalVisible: visible });
+    setThemeModalVisible = (visible, index) => {
+        this.setState({ themeModalVisible: visible });
     }
 
     onAccentColorChange = (newColor) =>{
         this.setState({accentColor: newColor});
     }
 
-
     render(){
         const { navigate } = this.props.navigation;
-        const { backgroundModalVisible } = this.state;
-        const { accentModalVisible } = this.state;
+        const { themeModalVisible } = this.state;
         return (
-            <SafeAreaView style={[styles.container, {backgroundColor: this.state.backgroundColor}]}>
-                <StatusBar style="auto" />
+            <ThemeProvider theme={this.props.theme}>
+                <Container>
+                    <StatusBar style="auto" />
 
-                <View style={styles.settings}>
-                    <View style={styles.settingWrapper}>
-                        <Text style={styles.settingText}>
-                            Disable Timer during Solve
-                        </Text>
-                        <Switch style={styles.switch} 
-                            trackColor={{ false: "black", true: "lime" }}
-                            thumbColor={this.state.isTimerDisabled ? "green" : "red"}
-                            ios_backgroundColor="#3e3e3e"
-                            onValueChange={this.toggleTimerDisableSwitch}
-                            value={this.state.isTimerDisabled}
-                        />
+                    <Modal
+                    animationType="slide"
+                    transparent={true}
+                    visible={themeModalVisible}
+                    onRequestClose={() => {
+                        this.setThemeModalVisible(!themeModalVisible);
+                    }}
+                    >
+                        <TouchableOpacity activeOpacity={1} onPress={() => this.setThemeModalVisible(!themeModalVisible)} style={{flex: 1,justifyContent: 'center',alignItems: 'center'}}>
+                        <TouchableOpacity activeOpacity={1} style={{width: '60%', height: '20%'}}>
+                            <ModalView>
+                                <View style={styles.themes}>
+                                    <TouchableOpacity activeOpacity={1} style={styles.theme} onPress={() => this.switchTheme('default')}>
+                                        <View style={{backgroundColor: "#007fff", width: 50, height: 30, borderWidth: 2, borderColor: this.state.defaultThemeBorder}}></View>
+                                        <ModalText>Default</ModalText>
+                                    </TouchableOpacity>
+                                    <TouchableOpacity activeOpacity={1} style={styles.theme} onPress={() => this.switchTheme('dark')}>
+                                        <View style={{backgroundColor: '#000000', width: 50, height: 30, borderWidth: 2, borderColor: this.state.darkThemeBorder}}></View>
+                                        <ModalText>Dark</ModalText>
+                                    </TouchableOpacity>
+                                    <TouchableOpacity activeOpacity={1} style={styles.theme} onPress={() => this.switchTheme('light')}>
+                                        <View style={{backgroundColor: '#FFFFFF', width: 50, height: 30, borderWidth: 2, borderColor: this.state.lightThemeBorder}}></View>
+                                        <ModalText>Light</ModalText>
+                                    </TouchableOpacity>
+                                </View>
+
+                            </ModalView>
+                        </TouchableOpacity>
+                        </TouchableOpacity>
+                    </Modal>
+
+                    <View style={styles.settings}>
+                        <View style={styles.settingWrapper}>
+                            <Text style={styles.settingText}>
+                                Disable Timer during Solve
+                            </Text>
+                            <Switch style={styles.switch} 
+                                trackColor={{ false: "black", true: "lime" }}
+                                thumbColor={this.state.isTimerDisabled ? "green" : "red"}
+                                ios_backgroundColor="#3e3e3e"
+                                onValueChange={this.toggleTimerDisableSwitch}
+                                value={this.state.isTimerDisabled}
+                            />
+                        </View>
+
+                        <View style={styles.settingWrapper}>
+                            <Text style={styles.settingText}>
+                                Change Theme
+                            </Text>
+                            <TouchableOpacity activeOpacity={1} onPress={() => this.setThemeModalVisible(true)}>
+                                <View style={{backgroundColor: this.state.currentTheme, width: 50, height: 30, borderWidth: 2, borderColor: 'black'}}></View>
+                            </TouchableOpacity>
+                        </View>
                     </View>
-                    <View style={styles.settingWrapper}>
-                        <Text style={styles.settingText}>
-                            Enable Inspection
-                        </Text>
-                        <Switch style={styles.switch} 
-                            trackColor={{ false: "black", true: "lime" }}
-                            thumbColor={this.state.inspection ? "green" : "red"}
-                            ios_backgroundColor="#3e3e3e"
-                            onValueChange={this.ToggleInspectionSwitch}
-                            value={this.state.inspection}
-                        />
-                    </View>
-                </View>
 
 
-                <View style={[styles.pageNavigator, {backgroundColor: this.state.accentColor}]}>
-                    <TouchableOpacity>
-                        <Image style={styles.pagesButtonClicked} source={require('../assets/settings.png')}/>
-                    </TouchableOpacity>
-                    <TouchableOpacity onPress={() => this.props.navigation.navigate('HomeScreen')}>
-                        <Image style={styles.pagesButton} source={require('../assets/home.png')}/>
-                    </TouchableOpacity>
-                    <TouchableOpacity onPress={() => this.props.navigation.navigate('SolvesScreen')}>
-                        <Image style={styles.pagesButton} source={require('../assets/graph.png')}/>
-                    </TouchableOpacity>
-                </View>
-            </SafeAreaView>
+                    <PageNavigator>
+                        <TouchableOpacity>
+                            <Image style={styles.pagesButtonClicked} source={require('../assets/settings.png')}/>
+                        </TouchableOpacity>
+                        <TouchableOpacity onPress={() => this.props.navigation.navigate('HomeScreen')}>
+                            <Image style={styles.pagesButton} source={require('../assets/home.png')}/>
+                        </TouchableOpacity>
+                        <TouchableOpacity onPress={() => this.props.navigation.navigate('SolvesScreen')}>
+                            <Image style={styles.pagesButton} source={require('../assets/graph.png')}/>
+                        </TouchableOpacity>
+                    </PageNavigator>
+                </Container>
+            </ThemeProvider>
+            
             )
     }
 }
 
 const styles = StyleSheet.create({
-    container: {
-        flex: 1,
-        alignItems: 'center',
-        width: "100%",
-        justifyContent: "space-between"
-    },
-    pageNavigator: {
-        position: 'absolute',
-        bottom: 50,
-        flexDirection: 'row',
-        justifyContent: 'space-around',
-        alignItems: 'center',
-        paddingVertical: 15,
-        paddingHorizontal: 15,
-        borderRadius: 60,
-        width: 250,
-    },
     pagesButton: {
         width: 25,
         height: 25,
@@ -191,7 +231,7 @@ const styles = StyleSheet.create({
         paddingHorizontal: 15,
         borderRadius: 60,
         width: 350,
-        backgroundColor: 'darkgray',
+        backgroundColor: '#696969',
         margin: 10,
         height: 60,
     },
@@ -207,23 +247,65 @@ const styles = StyleSheet.create({
         borderColor: 'black',
         borderWidth: 1,
     },
-    modalView: {
-        flex: 1,
-        backgroundColor: "white",
-        borderRadius: 20,
-        padding: 35,
-        alignItems: 'center',
-        justifyContent: 'space-around',
-        shadowColor: "#000",
-        shadowOffset: {
-            width: 0,
-            height: 2
-        },
-        shadowOpacity: 0.25,
-        shadowRadius: 4,
-        elevation: 5,
+    whiteText:{
+        color: '#FFFFFF'
     },
-    colorPicker: {
-        
+    theme: {
+        alignItems: 'center',
+        margin: 5,
+    },
+    themes:{
+        flex: 1,
+        flexDirection: 'row',
+        alignItems: 'center',
     },
 });
+
+const Container = styled.SafeAreaView`
+  flex: 1;
+  background-color: ${props => props.theme.PRIMARY_BACKGROUND_COLOR};
+  justify-content: space-between;
+  align-items: center;
+  width: 100%;
+`
+
+const PageNavigator = styled.View`
+    position: absolute;
+    bottom: 50px;
+    flex-direction: row;
+    justify-content: space-around;
+    align-items: center;
+    padding-vertical: 15px;
+    padding-horizontal: 15px;
+    border-radius: 60px;
+    width: 250px;
+    backgroundColor: ${props => props.theme.SECONDARY_BACKGROUND_COLOR};
+`
+const ModalView = styled.View`
+    flex: 1;
+    backgroundColor: ${props => props.theme.PRIMARY_BACKGROUND_COLOR};
+    borderRadius: 20px;
+    padding: 35px;
+    alignItems: center;
+    justifyContent: space-around;
+    shadowColor: #000;
+    shadowOpacity: 0.25;
+    shadowRadius: 4px;
+    elevation: 5;
+`
+const ModalText = styled.Text`
+    color: ${props => props.theme.PRIMARY_TEXT_COLOR};
+`
+
+const mapStateToProps = state => ({
+    theme: state.themeReducer.theme
+  })
+  
+const mapDispatchToProps = dispatch => ({
+    switchTheme: bindActionCreators(switchTheme, dispatch)
+})
+
+export default connect(
+    mapStateToProps,
+    mapDispatchToProps
+)(SettingsScreen)

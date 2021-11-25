@@ -8,12 +8,17 @@ import Square from '../components/Square';
 import AsyncStorage  from "@react-native-async-storage/async-storage";
 import moment from 'moment';
 
+import styled, { ThemeProvider } from 'styled-components/native'
+import { connect } from 'react-redux'
+import { bindActionCreators } from 'redux'
+import { switchTheme } from '../redux/actions'
+import { darkTheme, lightTheme, defaultTheme } from '../styles/theme'
+
 var scrambo = new Scrambo();
 var cube = new Cube();
 var faces = (cube.asString()).split('')
 
-
-export default class HomeScreen extends Component{
+class HomeScreen extends Component{
 
     constructor (props){
         super(props);
@@ -22,7 +27,7 @@ export default class HomeScreen extends Component{
             scrambleText: '',
             timerText: '0.00',
             hiddentTimerText: '0.00',
-            timerColor : 'white',
+            timerColor: props.theme.PRIMARY_TEXT_COLOR,
             isTimerRunning: false,
             isTimerDisabled: false,
             currentSolve: '-',
@@ -65,6 +70,8 @@ export default class HomeScreen extends Component{
     }
     componentDidMount = async() =>{
 
+        this.getTheme();
+
         this.checkSwitches();
 
         this.displayAverages();
@@ -72,6 +79,24 @@ export default class HomeScreen extends Component{
         this.getSessions();
 
         this.getScramble();
+    }
+
+    getTheme = async () => {
+        var theme = await AsyncStorage.getItem("theme");
+        if(theme == null){
+            theme = 'default'
+        }
+
+        switch(theme) {
+            case 'dark':
+                this.props.switchTheme(darkTheme);
+                break;
+            case 'light':
+                this.props.switchTheme(lightTheme);
+                break;
+            default:
+                this.props.switchTheme(defaultTheme);
+        }
     }
 
     getScramble = async () => {
@@ -547,188 +572,190 @@ export default class HomeScreen extends Component{
         });
 
         return (
-            <SafeAreaView style={styles.container}>
+            <ThemeProvider theme={this.props.theme}>
+                <Container>
+                    <Modal
+                        animationType="slide"
+                        transparent={true}
+                        visible={modalVisible}
+                        onRequestClose={() => {
+                            this.setModalVisible(!modalVisible);
+                        }}
+                        >
+                        <TouchableOpacity activeOpacity={1} onPress={() => this.setModalVisible(!modalVisible)} style={{flex: 1,justifyContent: 'center',alignItems: 'center'}}>
+                        <TouchableOpacity activeOpacity={1} style={{width: '60%', height: '40%'}}>
+                        <KeyboardAvoidingView
+                            style={styles.centeredView}
+                            behavior={Platform.OS === "ios" ? "padding" : "height"}
+                        >
+                            <ModalView>
+                                <ModalTextInput
+                                    placeholder="session name"
+                                    placeholderTextColor="lightgray" 
+                                    onChangeText={ text => this.setState({modalCubeType: text})}
+                                />
+                                <ScrambleSelector
+                                itemStyle={{height: 100}}
+                                    selectedValue={this.state.selectedScramble}
+                                    onValueChange={(itemValue, itemIndex) => this.setSelectedScramble(itemValue, itemIndex)}
+
+                                >
+                                    {scrambleCodes}
+                                </ScrambleSelector>
+                                <ModalButton
+                                    onPress={() => this.addCubeType()}
+                                >
+                                    <TextStyle>Add</TextStyle>
+                                </ModalButton>
+                            </ModalView>
+                        </KeyboardAvoidingView>
+                        </TouchableOpacity>
+                        </TouchableOpacity>
+                    </Modal>
 
 
-                <Modal
-                    animationType="slide"
-                    transparent={true}
-                    visible={modalVisible}
-                    onRequestClose={() => {
-                        this.setModalVisible(!modalVisible);
-                    }}
-                    >
-                    <TouchableOpacity activeOpacity={1} onPress={() => this.setModalVisible(!modalVisible)} style={{flex: 1,justifyContent: 'center',alignItems: 'center'}}>
-                    <TouchableOpacity activeOpacity={1} style={{width: '60%', height: '40%'}}>
-                    <KeyboardAvoidingView
-                        style={styles.centeredView}
-                        behavior={Platform.OS === "ios" ? "padding" : "height"}
-                    >
-                        <View style={styles.modalView}>
-                            <TextInput
-                                style={styles.modalTextInput}
-                                placeholder="new session"
-                                placeholderTextColor="lightgray" 
-                                onChangeText={ text => this.setState({modalCubeType: text})}
-                            />
-                            <Picker
-                            itemStyle={{height: 100}}
-                                selectedValue={this.state.selectedScramble}
-                                style={styles.scrambleSelector}
-                                onValueChange={(itemValue, itemIndex) => this.setSelectedScramble(itemValue, itemIndex)}
+                    <View style={styles.cubeSelectionContainer}>
+                        <AddCubeTypeButton activeOpacity={1}onPress={() => this.deleteSessionAlert()}>
+                            <Text>x</Text>
+                        </AddCubeTypeButton>
 
-                            >
-                                {scrambleCodes}
-                            </Picker>
-                            <Pressable
-                                style={styles.modalButton}
-                                onPress={() => this.addCubeType()}
-                            >
-                                <Text style={styles.textStyle}>Add</Text>
-                            </Pressable>
+                        <Selector
+                        itemStyle={{height: 44}}
+                            selectedValue={this.state.selectedCube}
+                            onValueChange={(itemValue, itemIndex) => this.setSelectedSession(itemValue, itemIndex)}
+
+                        >
+                            {cubeTypes}
+                        </Selector>
+
+                        <AddCubeTypeButton activeOpacity={1} onPress={() => this.setModalVisible(true)}>
+                            <Text>+</Text>
+                        </AddCubeTypeButton>
+                    </View>
+                    
+
+                    <TouchableOpacity activeOpacity={1} style={styles.scramble} onPress={this.handleNewScramble}>
+                        <SrambleText>{this.state.scrambleText}</SrambleText>
+                    </TouchableOpacity>
+                    <TouchableOpacity activeOpacity={1} style={styles.timer} onPressIn={this.handleTimerPressIn} onPressOut={this.handleTimerPressOut}>
+                        <TimerText>{this.state.timerText}</TimerText>
+                    </TouchableOpacity>
+                    <StatusBar style="auto" />
+
+                    <View style={styles.averages}>
+                        <View>
+                            <AveragesText>current: {this.state.currentSolve}</AveragesText>
+                            <AveragesText>mean: {this.state.mean}</AveragesText>
+                            <AveragesText>ao5: {this.state.ao5}</AveragesText>
+                            <AveragesText>ao12: {this.state.ao12}</AveragesText>
+                            <AveragesText>ao100: {this.state.ao100}</AveragesText>
                         </View>
-                    </KeyboardAvoidingView>
-                    </TouchableOpacity>
-                    </TouchableOpacity>
-                </Modal>
 
 
-                <View style={styles.cubeSelectionContainer}>
-                    <TouchableOpacity activeOpacity={1} style={styles.addCubeTypeButton} onPress={() => this.deleteSessionAlert()}>
-                        <Text>x</Text>
-                    </TouchableOpacity>
+                        <View style={styles.scrambleImage}>
+                            <View style={styles.faces}>
+                            {
+                                this.state.uFace.map((item, index) =>{
+                                return (
+                                    <Square color={this.colorJSON[item]}/>
+                                )
+                                })
+                            }
+                            </View>
+                            <View style={styles.middleFaces}>
+                            
+                                <View style={styles.faces}>
+                                {
+                                    this.state.lFace.map((item, index) =>{
+                                    return (
+                                        <Square color={this.colorJSON[item]}/>
+                                    )
+                                    })
+                                }
+                                </View>
+                                <View style={styles.faces}>
+                                {
+                                    this.state.fFace.map((item, index) =>{
+                                    return (
+                                        <Square color={this.colorJSON[item]}/>
+                                    )
+                                    })
+                                }
+                                </View>
+                                <View style={styles.faces}>
+                                {
+                                    this.state.rFace.map((item, index) =>{
+                                    return (
+                                        <Square color={this.colorJSON[item]}/>
+                                    )
+                                    })
+                                }
+                                </View>
+                                <View style={styles.faces}>
+                                {
+                                    this.state.bFace.map((item, index) =>{
+                                    return (
+                                        <Square color={this.colorJSON[item]}/>
+                                    )
+                                    })
+                                }
+                                </View>
+                            </View>
+                            <View style={styles.faces}>
+                            {
+                                this.state.dFace.map((item, index) =>{
+                                return (
+                                    <Square color={this.colorJSON[item]}/>
+                                )
+                                })
+                            }
+                            </View>
+                        </View>
 
-                    <Picker
-                    itemStyle={{height: 44}}
-                        selectedValue={this.state.selectedCube}
-                        style={styles.selector}
-                        onValueChange={(itemValue, itemIndex) => this.setSelectedSession(itemValue, itemIndex)}
 
-                    >
-                        {cubeTypes}
-                    </Picker>
-
-                    <TouchableOpacity activeOpacity={1} style={styles.addCubeTypeButton} onPress={() => this.setModalVisible(true)}>
-                        <Text>+</Text>
-                    </TouchableOpacity>
-                </View>
-                
-
-                <TouchableOpacity activeOpacity={1} style={styles.scramble} onPress={this.handleNewScramble}>
-                    <Text style={styles.scrambleText}>{this.state.scrambleText}</Text>
-                </TouchableOpacity>
-                <TouchableOpacity activeOpacity={1} style={styles.timer} onPressIn={this.handleTimerPressIn} onPressOut={this.handleTimerPressOut}>
-                    <Text style={{ color: this.state.timerColor, fontSize: 50, bottom: '25%'}}>{this.state.timerText}</Text>
-                </TouchableOpacity>
-                <StatusBar style="auto" />
-
-                <View style={styles.averages}>
-                    <View>
-                        <Text style={styles.averagesText}>current: {this.state.currentSolve}</Text>
-                        <Text style={styles.averagesText}>mean: {this.state.mean}</Text>
-                        <Text style={styles.averagesText}>ao5: {this.state.ao5}</Text>
-                        <Text style={styles.averagesText}>ao12: {this.state.ao12}</Text>
-                        <Text style={styles.averagesText}>ao100: {this.state.ao100}</Text>
+                        <View>
+                            <AveragesText>best: {this.state.bestSolve}</AveragesText>
+                            <AveragesText>mean: {this.state.bestMean}</AveragesText>
+                            <AveragesText>ao5: {this.state.bestAo5}</AveragesText>
+                            <AveragesText>ao12: {this.state.bestAo12}</AveragesText>
+                            <AveragesText>ao100: {this.state.bestAo100}</AveragesText>
+                        </View>
                     </View>
 
-
-                    <View style={styles.scrambleImage}>
-                        <View style={styles.faces}>
-                        {
-                            this.state.uFace.map((item, index) =>{
-                            return (
-                                <Square color={this.colorJSON[item]}/>
-                            )
-                            })
-                        }
-                        </View>
-                        <View style={styles.middleFaces}>
-                        
-                            <View style={styles.faces}>
-                            {
-                                this.state.lFace.map((item, index) =>{
-                                return (
-                                    <Square color={this.colorJSON[item]}/>
-                                )
-                                })
-                            }
-                            </View>
-                            <View style={styles.faces}>
-                            {
-                                this.state.fFace.map((item, index) =>{
-                                return (
-                                    <Square color={this.colorJSON[item]}/>
-                                )
-                                })
-                            }
-                            </View>
-                            <View style={styles.faces}>
-                            {
-                                this.state.rFace.map((item, index) =>{
-                                return (
-                                    <Square color={this.colorJSON[item]}/>
-                                )
-                                })
-                            }
-                            </View>
-                            <View style={styles.faces}>
-                            {
-                                this.state.bFace.map((item, index) =>{
-                                return (
-                                    <Square color={this.colorJSON[item]}/>
-                                )
-                                })
-                            }
-                            </View>
-                        </View>
-                        <View style={styles.faces}>
-                        {
-                            this.state.dFace.map((item, index) =>{
-                            return (
-                                <Square color={this.colorJSON[item]}/>
-                            )
-                            })
-                        }
-                        </View>
-                    </View>
-
-
-                    <View>
-                        <Text style={styles.averagesText}>best: {this.state.bestSolve}</Text>
-                        <Text style={styles.averagesText}>mean: {this.state.bestMean}</Text>
-                        <Text style={styles.averagesText}>ao5: {this.state.bestAo5}</Text>
-                        <Text style={styles.averagesText}>ao12: {this.state.bestAo12}</Text>
-                        <Text style={styles.averagesText}>ao100: {this.state.bestAo100}</Text>
-                    </View>
-                </View>
-
-                <View style={styles.pageNavigator}>
-                    <TouchableOpacity onPress={() => this.props.navigation.navigate('SettingsScreen')}>
-                        <Image style={styles.pagesButton} source={require('../assets/settings.png')}/>
-                    </TouchableOpacity>
-                    <TouchableOpacity>
-                        <Image style={styles.pagesButtonClicked} source={require('../assets/home.png')}/>
-                    </TouchableOpacity>
-                    <TouchableOpacity onPress={() => this.props.navigation.navigate('SolvesScreen')}>
-                    <Image style={styles.pagesButton} source={require('../assets/graph.png')}/>
-                    </TouchableOpacity>
-                </View>
-            </SafeAreaView>
+                    <PageNavigator>
+                        <TouchableOpacity onPress={() => this.props.navigation.navigate('SettingsScreen')}>
+                            <Image style={styles.pagesButton} source={require('../assets/settings.png')}/>
+                        </TouchableOpacity>
+                        <TouchableOpacity>
+                            <Image style={styles.pagesButtonClicked} source={require('../assets/home.png')}/>
+                        </TouchableOpacity>
+                        <TouchableOpacity onPress={() => this.props.navigation.navigate('SolvesScreen')}>
+                        <Image style={styles.pagesButton} source={require('../assets/graph.png')}/>
+                        </TouchableOpacity>
+                    </PageNavigator>
+                </Container>
+            </ThemeProvider>
+            
             )
     }
 }
 
+const mapStateToProps = state => ({
+    theme: state.themeReducer.theme
+  })
+  
+  const mapDispatchToProps = dispatch => ({
+    switchTheme: bindActionCreators(switchTheme, dispatch)
+  })
+  
+  export default connect(
+    mapStateToProps,
+    mapDispatchToProps
+  )(HomeScreen)
+
 const styles = StyleSheet.create({
-    container: {
-        flex: 1,
-        backgroundColor: '#303030',
-        alignItems: 'center',
-    },
     scramble: {
         padding: 15,
-    },
-    scrambleText: {
-        color: 'white',
     },
     timer: {
         flex: 1,
@@ -744,18 +771,6 @@ const styles = StyleSheet.create({
         width: '100%',
         
     },
-    pageNavigator: {
-        position: 'absolute',
-        bottom: 50,
-        flexDirection: 'row',
-        justifyContent: 'space-around',
-        alignItems: 'center',
-        paddingVertical: 15,
-        paddingHorizontal: 15,
-        borderRadius: 60,
-        width: 250,
-        backgroundColor: '#007fff' 
-    },
     pagesButton: {
         width: 25,
         height: 25,
@@ -763,10 +778,6 @@ const styles = StyleSheet.create({
     pagesButtonClicked: {
         width: 35,
         height: 35,
-    },
-    averagesText: {
-        fontSize: 10,
-        color: 'white',
     },
     faces: {
         flexDirection: 'row',
@@ -785,30 +796,10 @@ const styles = StyleSheet.create({
         alignItems: 'center',
         justifyContent: "center",
     },
-    selector: {
-        backgroundColor: '#007fff',
-        borderRadius: 10,
-        width: '70%'
-    },
-    scrambleSelector: {
-        backgroundColor: '#007fff',
-        borderRadius: 10,
-        width: 150,
-
-    },
     cubeSelectionContainer: {
         flexDirection: 'row',
         alignItems: 'center',
         justifyContent: 'space-between',
-    },
-    addCubeTypeButton: {
-        backgroundColor: '#007fff',
-        alignItems: 'center',
-        justifyContent: 'center',
-        height: 30,
-        width: 30,
-        borderRadius: 30,
-        margin: 8
     },
     centeredView: {
         flex: 1,
@@ -816,40 +807,93 @@ const styles = StyleSheet.create({
         alignItems: "center",
         marginTop: 22,
     },
-    modalView: {
-        flex: 1,
-        backgroundColor: "white",
-        borderRadius: 20,
-        padding: 35,
-        alignItems: 'center',
-        justifyContent: 'space-around',
-        shadowColor: "#000",
-        shadowOffset: {
-            width: 0,
-            height: 2
-        },
-        shadowOpacity: 0.25,
-        shadowRadius: 4,
-        elevation: 5,
-    },
-    modalButton: {
-        backgroundColor: '#007fff',
-        borderRadius: 20,
-        padding: 10,
-        elevation: 2,
-    },
-    modalTextInput: {
-        paddingVertical: 15,
-        paddingHorizontal: 15,
-        backgroundColor: 'white',
-        borderRadius: 60,
-        borderColor: '#C0C0C0',
-        borderWidth: 1,
-        minWidth: '50%',
-        },
-    textStyle: {
-        color: "white",
-        fontWeight: "bold",
-        textAlign: "center"
-    },
 });
+
+const Container = styled.SafeAreaView`
+  flex: 1;
+  background-color: ${props => props.theme.PRIMARY_BACKGROUND_COLOR};
+  justify-content: center;
+  align-items: center;
+`
+
+const PageNavigator = styled.View`
+    position: absolute;
+    bottom: 50px;
+    flex-direction: row;
+    justify-content: space-around;
+    align-items: center;
+    padding-vertical: 15px;
+    padding-horizontal: 15px;
+    border-radius: 60px;
+    width: 250px;
+    backgroundColor: ${props => props.theme.SECONDARY_BACKGROUND_COLOR};
+`
+const ScrambleSelector = styled.Picker`
+    backgroundColor: ${props => props.theme.SECONDARY_BACKGROUND_COLOR};
+    borderRadius: 10px;
+    width: 150px;
+`
+const Selector = styled.Picker`
+backgroundColor: ${props => props.theme.SECONDARY_BACKGROUND_COLOR};
+    borderRadius: 10px;
+    width: 70%;
+`
+
+const TextStyle = styled.Text`
+    color: ${props => props.theme.SECONDARY_TEXT_COLOR};
+    fontWeight: bold;
+    textAlign: center;
+`
+
+const ModalTextInput = styled.TextInput`
+    paddingVertical: 15px;
+    paddingHorizontal: 15px;
+    backgroundColor: ${props => props.theme.PRIMARY_BACKGROUND_COLOR};
+    borderRadius: 60px;
+    borderColor: ${props => props.theme.PRIMARY_TEXT_COLOR};
+    borderWidth: 1px;
+    minWidth: 50%;
+    color: ${props => props.theme.PRIMARY_TEXT_COLOR};
+`
+
+const ModalButton = styled.Pressable`
+    backgroundColor: ${props => props.theme.SECONDARY_BACKGROUND_COLOR};
+    borderRadius: 20px;
+    padding: 10px;
+    elevation: 2;
+`
+
+const ModalView = styled.View`
+    flex: 1;
+    backgroundColor: ${props => props.theme.PRIMARY_BACKGROUND_COLOR};
+    borderRadius: 20px;
+    padding: 35px;
+    alignItems: center;
+    justifyContent: space-around;
+    shadowColor: #000;
+    shadowOpacity: 0.25;
+    shadowRadius: 4px;
+    elevation: 5;
+`
+const AddCubeTypeButton = styled.TouchableOpacity`
+    backgroundColor: ${props => props.theme.SECONDARY_BACKGROUND_COLOR};
+    align-items: center;
+    justify-content: center;
+    height: 30px;
+    width: 30px;
+    border-radius: 30px;
+    margin: 8px;
+`
+
+const SrambleText = styled.Text`
+    color: ${props => props.theme.PRIMARY_TEXT_COLOR};
+`
+const AveragesText = styled.Text`
+    color: ${props => props.theme.PRIMARY_TEXT_COLOR};
+    font-size: 10px;
+`
+const TimerText = styled.Text`
+    color: ${props => props.theme.PRIMARY_TEXT_COLOR};
+    fontSize: 50px;
+    bottom: 25%;
+`
