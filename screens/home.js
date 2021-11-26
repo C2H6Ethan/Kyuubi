@@ -202,38 +202,45 @@ class HomeScreen extends Component{
 
             solves.forEach(element => {
                 times.push(Number(element['timeInSeconds']));
-                means.push(Number(element['timeInSeconds']));
+                means.push(Number(element['meanInSeconds']));
                 if (solves.length >= 5)
                 {
-                if (! isNaN(element['ao5'])){
-                        ao5s.push(Number(element['ao5']));
+                if (!Number(element['ao5InSeconds']) == 0){
+                        ao5s.push(Number(element['ao5InSeconds']));
                     } 
 
                     minAo5 =  Math.min(...ao5s);
+                    if(minAo5>60){minAo5 = this.secToMin(minAo5)}
                 }
                 
                 if (solves.length >= 12)
                 {
-                if (! isNaN(element['ao12'])){
-                        ao12s.push(Number(element['ao12']));
+                if (! Number(element['ao12InSeconds']) == 0){
+                        ao12s.push(Number(element['ao12InSeconds']));
                     } 
 
                     minAo12 = Math.min(...ao12s);
+                    if(minAo12>60){minAo12 = this.secToMin(minAo12)}
                 }
 
                 if (solves.length >= 100)
                 {
-                    if (! isNaN(element['ao100'])){
-                        ao100s.push(Number(element['ao100']));
+                    if (! Number(element['ao100InSeconds']) == 0){
+                        ao100s.push(Number(element['ao100InSeconds']));
                     }
 
                     minAo100 = Math.min(...ao100s);
+                    if(minAo100>60){minAo100 = this.secToMin(minAo100)}
                 }
                 
                 
             });
+            var minTime = Math.min(...times);
+            if(minTime>60){minTime = this.secToMin(minTime)}
 
-            this.setState({bestSolve: Math.min(...times), bestMean: Math.min(...means), bestAo5: minAo5, bestAo12: minAo12, bestAo100: minAo100})
+            var minMean = Math.min(...means);
+            if(minMean>60){minMean = this.secToMin(minMean)}
+            this.setState({bestSolve: minTime, bestMean: minMean, bestAo5: minAo5, bestAo12: minAo12, bestAo100: minAo100})
         }
         else{this.setState({currentSolve: '-', mean: '-', ao5: '-', ao12: '-', ao100: '-', bestSolve: '-', bestMean: '-', bestAo5: '-', bestAo12: '-', bestAo100: '-'})}
         }
@@ -271,15 +278,15 @@ class HomeScreen extends Component{
             sum = sum + parseFloat(solve['timeInSeconds']);
             var mean = sum / (solves.length + 1);
             mean = Number(mean).toFixed(2);
+            solve['meanInSeconds'] = mean;
             if(mean > 60){mean = this.secToMin(mean)}
             solve['mean'] = mean;
-            this.setState({mean: mean})
         }
         else {
-            solve['mean'] = solve['timeInSeconds'];
             var mean = Number(solve['timeInSeconds']).toFixed(2);
+            solve['meanInSeconds'] = mean;
             if(mean > 60){mean = this.secToMin(mean)}
-            this.setState({mean: mean})
+            solve['mean'] = mean;
         }
 
         if (solves.length >= 4)
@@ -304,8 +311,8 @@ class HomeScreen extends Component{
 
             var ao5 = sum / 3;
             ao5 = ao5.toFixed(2);
+            solve['ao5InSeconds'] = ao5;
             if(ao5>60){ao5 = this.secToMin(ao5)}
-            this.setState({ao5: ao5})
             solve['ao5'] = ao5;
 
             if(solves.length >= 11)
@@ -329,8 +336,8 @@ class HomeScreen extends Component{
 
                 var ao12 = sum / 10;
                 ao12 = ao12.toFixed(2);
+                solve['ao12InSeconds'] = ao12;
                 if(ao12>60){ao12 = this.secToMin(ao12)}
-                this.setState({ao12: ao12})
                 solve['ao12'] = ao12;
 
                 if(solves.length >= 99)
@@ -354,8 +361,8 @@ class HomeScreen extends Component{
 
                     var ao100 = sum / 98;
                     ao100 = ao100.toFixed(2);
+                    solve['ao100InSeconds'] = ao100;
                     if(ao100>60){ao100 = this.secToMin(ao100)}
-                    this.setState({ao100:ao100})
                     solve['ao100'] = ao100;
                 }
             }
@@ -380,7 +387,7 @@ class HomeScreen extends Component{
         var solveScramble = this.state.scrambleText;
         var solveTime = this.state.hiddentTimerText;
         
-        var solve = {time: solveTime, timeInSeconds:this.state.timeInSeconds, scramble: solveScramble, date: solveDate, mean: '-', ao5: '-', ao12: '-', ao100: '-', cubeType: this.state.selectedCube};
+        var solve = {time: solveTime, timeInSeconds:this.state.timeInSeconds, scramble: solveScramble, date: solveDate, mean: '-', meanInSeconds:0, ao5: '-', ao5InSeconds: 0, ao12: '-',ao12InSeconds: 0, ao100: '-',ao100InSeconds: 0, cubeType: this.state.selectedCube};
        
         var solves = await AsyncStorage.getItem("solves");
         if (solves == null ) {
