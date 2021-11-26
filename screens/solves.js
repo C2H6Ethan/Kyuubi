@@ -5,6 +5,7 @@ import  AsyncStorage  from "@react-native-async-storage/async-storage";
 import { ScrollView, TouchableWithoutFeedback } from 'react-native-gesture-handler';
 import moment from 'moment';
 import {Picker} from '@react-native-picker/picker';
+import BannerAd from "../Ads/BannerAdSettings";
 
 import styled, { ThemeProvider } from 'styled-components/native'
 import { connect } from 'react-redux'
@@ -110,7 +111,7 @@ class SolvesScreen extends Component{
             return this.state.solves.map((data, index) => {
                 return (
                     <Times key={index} onPress={() => this.setModalVisible(true, index)}>
-                      <Text>{data.time}</Text> 
+                      <TimeText>{data.time}</TimeText> 
                     </Times>
                 )
               })
@@ -293,6 +294,9 @@ const Times = styled.TouchableOpacity`
 
 const SolvesCount = styled.Text`
     color: ${props => props.theme.PRIMARY_TEXT_COLOR};
+`
+const TimeText = styled.Text`
+    color: ${props => props.theme.SECONDARY_TEXT_COLOR};
 `
 
 const ModalView = styled.View`

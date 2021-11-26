@@ -2,12 +2,15 @@ import { StatusBar } from 'expo-status-bar';
 import React, { Component } from 'react';
 import { Modal, SafeAreaView, StyleSheet, Text, TouchableOpacity, View, Button, Image, Switch } from 'react-native';
 import  AsyncStorage  from "@react-native-async-storage/async-storage";
+import {Picker} from '@react-native-picker/picker';
+import BannerAd from "../Ads/BannerAdSettings";
+
 
 import styled, { ThemeProvider } from 'styled-components/native'
 import { connect } from 'react-redux'
 import { bindActionCreators } from 'redux'
 import { switchTheme } from '../redux/actions'
-import { darkTheme, lightTheme, defaultTheme, redTheme } from '../styles/theme'
+import { darkTheme, lightTheme, defaultTheme, redTheme, avocadoTheme, cottonCandyTheme } from '../styles/theme'
 
 class SettingsScreen extends Component{
     constructor(props){
@@ -16,12 +19,8 @@ class SettingsScreen extends Component{
         this.state = {
             isTimerDisabled: false,
 
-            currentTheme: '#007fff',
-            themeModalVisible: false,
-            defaultThemeBorder: '#007fff',
-            darkThemeBorder: '#000000',
-            lightThemeBorder: '#FFFFFF',
-            redThemeBorder: '#750000',
+            currentTheme: 'default',
+            themes: ['default', 'dark', 'light', 'red', 'avocado', 'cotton candy' ],
 
             picker: null,
         };
@@ -41,40 +40,55 @@ class SettingsScreen extends Component{
         
         switch(theme) {
             case 'dark':
-              this.setState({currentTheme: '#000000', darkThemeBorder: 'red'});
+              this.setState({currentTheme: 'dark'});
               break;
             case 'light':
-                this.setState({currentTheme: '#FFFFFF', lightThemeBorder: 'red'});
+                this.setState({currentTheme: 'light'});
               break;
             case 'red':
-                this.setState({currentTheme: '#750000', redThemeBorder: 'red'});
+                this.setState({currentTheme: 'red'});
+              break;
+            case 'avocado':
+                this.setState({currentTheme: 'avocado'});
+              break;
+            case 'cotton candy':
+                this.setState({currentTheme: 'cotton candy'});
               break;
             default:
-                this.setState({currentTheme: '#007fff', defaultThemeBorder: 'red'});
+                this.setState({currentTheme: 'default'});
         }
     }
 
-    switchTheme = async (theme) => {
-        this.setState({darkThemeBorder: '#000000', lightThemeBorder: '#FFFFFF', defaultThemeBorder: '#007fff', redThemeBorder: '#750000'});
-        switch(theme) {
+    switchTheme = async (itemValue, itemIndex) => {
+        switch(itemValue) {
             case 'dark':
               this.props.switchTheme(darkTheme);
-              this.setState({currentTheme: '#000000', darkThemeBorder: 'red'});
+              this.setState({currentTheme: 'dark'});
               this.storeData('theme', 'dark');
               break;
             case 'light':
                 this.props.switchTheme(lightTheme);
-                this.setState({currentTheme: '#FFFFFF', lightThemeBorder: 'red',});
+                this.setState({currentTheme: 'light'});
                 this.storeData('theme', 'light');
               break;
             case 'red':
                 this.props.switchTheme(redTheme);
-                this.setState({currentTheme: '#750000', redThemeBorder: 'red'});
+                this.setState({currentTheme: 'red'});
                 this.storeData('theme', 'red');
+              break;
+            case 'avocado':
+                this.props.switchTheme(avocadoTheme);
+                this.setState({currentTheme: 'avocado'});
+                this.storeData('theme', 'avocado');
+              break;
+            case 'cotton candy':
+                this.props.switchTheme(cottonCandyTheme);
+                this.setState({currentTheme: 'cotton candy'});
+                this.storeData('theme', 'cotton candy');
               break;
             default:
                 this.props.switchTheme(defaultTheme);
-                this.setState({currentTheme: '#007fff', defaultThemeBorder: 'red'});
+                this.setState({currentTheme: 'default'});
                 this.storeData('theme', 'default');
         }
         this.setThemeModalVisible(false);
@@ -141,48 +155,17 @@ class SettingsScreen extends Component{
     render(){
         const { navigate } = this.props.navigation;
         const { themeModalVisible } = this.state;
+
+        let themes = this.state.themes.map( (s, i) => {
+            return <Picker.Item  key={i} value={this.state.themes[i]} label={this.state.themes[i]} />
+        });
+        
         return (
             <ThemeProvider theme={this.props.theme}>
                 <Container>
                     <StatusBar style="auto" />
-
-                    <Modal
-                    animationType="slide"
-                    transparent={true}
-                    visible={themeModalVisible}
-                    onRequestClose={() => {
-                        this.setThemeModalVisible(!themeModalVisible);
-                    }}
-                    >
-                        <TouchableOpacity activeOpacity={1} onPress={() => this.setThemeModalVisible(!themeModalVisible)} style={{flex: 1,justifyContent: 'center',alignItems: 'center'}}>
-                        <TouchableOpacity activeOpacity={1} style={{width: '60%', height: '20%'}}>
-                            <ModalView>
-                                <View style={styles.themes}>
-                                    <TouchableOpacity activeOpacity={1} style={styles.theme} onPress={() => this.switchTheme('default')}>
-                                        <View style={{backgroundColor: "#007fff", width: 50, height: 30, borderWidth: 2, borderColor: this.state.defaultThemeBorder}}></View>
-                                        <ModalText>Default</ModalText>
-                                    </TouchableOpacity>
-                                    <TouchableOpacity activeOpacity={1} style={styles.theme} onPress={() => this.switchTheme('dark')}>
-                                        <View style={{backgroundColor: '#000000', width: 50, height: 30, borderWidth: 2, borderColor: this.state.darkThemeBorder}}></View>
-                                        <ModalText>Dark</ModalText>
-                                    </TouchableOpacity>
-                                    <TouchableOpacity activeOpacity={1} style={styles.theme} onPress={() => this.switchTheme('light')}>
-                                        <View style={{backgroundColor: '#FFFFFF', width: 50, height: 30, borderWidth: 2, borderColor: this.state.lightThemeBorder}}></View>
-                                        <ModalText>Light</ModalText>
-                                    </TouchableOpacity>
-                                    <TouchableOpacity activeOpacity={1} style={styles.theme} onPress={() => this.switchTheme('red')}>
-                                        <View style={{backgroundColor: '#750000', width: 50, height: 30, borderWidth: 2, borderColor: this.state.redThemeBorder}}></View>
-                                        <ModalText>Red</ModalText>
-                                    </TouchableOpacity>
-                                </View>
-
-                            </ModalView>
-                        </TouchableOpacity>
-                        </TouchableOpacity>
-                    </Modal>
-
                     <View style={styles.settings}>
-                        <View style={styles.settingWrapper}>
+                        <SettingWrapper>
                             <Text style={styles.settingText}>
                                 Disable Timer during Solve
                             </Text>
@@ -193,16 +176,21 @@ class SettingsScreen extends Component{
                                 onValueChange={this.toggleTimerDisableSwitch}
                                 value={this.state.isTimerDisabled}
                             />
-                        </View>
+                        </SettingWrapper>
 
-                        <View style={styles.settingWrapper}>
+                        <SettingWrapper>
                             <Text style={styles.settingText}>
                                 Change Theme
                             </Text>
-                            <TouchableOpacity activeOpacity={1} onPress={() => this.setThemeModalVisible(true)}>
-                                <View style={{backgroundColor: this.state.currentTheme, width: 50, height: 30, borderWidth: 2, borderColor: 'black'}}></View>
-                            </TouchableOpacity>
-                        </View>
+                            <ThemeSelector
+                                itemStyle={{height: 50}}
+                                    selectedValue={this.state.currentTheme}
+                                    onValueChange={(itemValue, itemIndex) => this.switchTheme(itemValue, itemIndex)}
+
+                                >
+                                    {themes}
+                            </ThemeSelector>
+                        </SettingWrapper>
                     </View>
 
 
@@ -234,20 +222,7 @@ const styles = StyleSheet.create({
         height: 35,
     },
     settings: {
-        top: '5%',
         margin: 10,
-    },
-    settingWrapper: {
-        flexDirection: 'row',
-        justifyContent: 'space-between',
-        alignItems: 'center',
-        paddingVertical: 15,
-        paddingHorizontal: 15,
-        borderRadius: 60,
-        width: 350,
-        backgroundColor: '#696969',
-        margin: 10,
-        height: 60,
     },
     backgroundColorSquare: {
         width: 50, 
@@ -272,13 +247,13 @@ const styles = StyleSheet.create({
         flex: 1,
         flexDirection: 'row',
         alignItems: 'center',
+        flexWrap: 'wrap',
     },
 });
 
 const Container = styled.SafeAreaView`
   flex: 1;
   background-color: ${props => props.theme.PRIMARY_BACKGROUND_COLOR};
-  justify-content: space-between;
   align-items: center;
   width: 100%;
 `
@@ -309,6 +284,23 @@ const ModalView = styled.View`
 `
 const ModalText = styled.Text`
     color: ${props => props.theme.PRIMARY_TEXT_COLOR};
+`
+const ThemeSelector = styled.Picker`
+    backgroundColor: ${props => props.theme.SECONDARY_BACKGROUND_COLOR};
+    borderRadius: 10px;
+    width: 150px;
+`
+const SettingWrapper = styled.View`
+    flexDirection: row;
+    justifyContent: space-between;
+    alignItems: center;
+    paddingVertical: 15px;
+    paddingHorizontal: 15px;
+    borderRadius: 60px;
+    width: 350px;
+    backgroundColor: ${props => props.theme.SECONDARY_BACKGROUND_COLOR};
+    margin: 10px;
+    height: 60px;
 `
 
 const mapStateToProps = state => ({

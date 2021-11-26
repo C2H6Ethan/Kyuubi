@@ -7,12 +7,13 @@ import Scrambo from 'scrambo';
 import Square from '../components/Square';
 import AsyncStorage  from "@react-native-async-storage/async-storage";
 import moment from 'moment';
+import BannerAd from "../Ads/BannerAdHome";
 
 import styled, { ThemeProvider } from 'styled-components/native'
 import { connect } from 'react-redux'
 import { bindActionCreators } from 'redux'
 import { switchTheme } from '../redux/actions'
-import { darkTheme, lightTheme, defaultTheme } from '../styles/theme'
+import { darkTheme, lightTheme, defaultTheme, redTheme, avocadoTheme, cottonCandyTheme } from '../styles/theme'
 
 var scrambo = new Scrambo();
 var cube = new Cube();
@@ -26,6 +27,7 @@ class HomeScreen extends Component{
         this.state = {
             scrambleText: '',
             timerText: '0.00',
+            timeInSeconds: 0,
             timerStyle: {},
             hiddentTimerText: '0.00',
             timerColor: props.theme.PRIMARY_TEXT_COLOR,
@@ -91,6 +93,15 @@ class HomeScreen extends Component{
                 break;
             case 'light':
                 this.props.switchTheme(lightTheme);
+                break;
+            case 'red':
+                this.props.switchTheme(redTheme);
+                break;
+            case 'avocado':
+                this.props.switchTheme(avocadoTheme);
+                break;
+            case 'cotton candy':
+                this.props.switchTheme(cottonCandyTheme);
                 break;
             default:
                 this.props.switchTheme(defaultTheme);
@@ -190,8 +201,8 @@ class HomeScreen extends Component{
             var minAo100 = '-';
 
             solves.forEach(element => {
-                times.push(Number(element['time']));
-                means.push(Number(element['time']));
+                times.push(Number(element['timeInSeconds']));
+                means.push(Number(element['timeInSeconds']));
                 if (solves.length >= 5)
                 {
                 if (! isNaN(element['ao5'])){
@@ -236,14 +247,14 @@ class HomeScreen extends Component{
         }
     }
 
-    calculateAverages = async (solve) => {
+    calculateAverages = async (solve) => {                       
         var solves = await AsyncStorage.getItem("solves");
         solves = JSON.parse(solves);
         solves = solves['solves'];
 
         //filter solves with cube type
         var filteredArray = []
-        solves.forEach(solve => {
+        solves.forEach(solve => {                                       
             if (solve['cubeType'] == this.state.selectedCube){filteredArray.push(solve)}
         });
         solves = filteredArray;
@@ -255,17 +266,20 @@ class HomeScreen extends Component{
             //calculate mean
             var sum = 0;
             solves.forEach(element => {
-                sum = sum + parseFloat(element['time']);
+                sum = sum + parseFloat(element['timeInSeconds']);
             });
-            sum = sum + parseFloat(solve['time']);
+            sum = sum + parseFloat(solve['timeInSeconds']);
             var mean = sum / (solves.length + 1);
             mean = Number(mean).toFixed(2);
+            if(mean > 60){mean = this.secToMin(mean)}
             solve['mean'] = mean;
             this.setState({mean: mean})
         }
         else {
-            solve['mean'] = solve['time'];
-            this.setState({mean: Number(solve['time']).toFixed(2)})
+            solve['mean'] = solve['timeInSeconds'];
+            var mean = Number(solve['timeInSeconds']).toFixed(2);
+            if(mean > 60){mean = this.secToMin(mean)}
+            this.setState({mean: mean})
         }
 
         if (solves.length >= 4)
@@ -275,9 +289,9 @@ class HomeScreen extends Component{
             var values = [];
             for (var i = 0; i < 4; i++){
                 var currentSolve = solves[i];
-                values.push(parseFloat(currentSolve['time']));
+                values.push(parseFloat(currentSolve['timeInSeconds']));
             }
-            values.push(parseFloat(solve['time']));
+            values.push(parseFloat(solve['timeInSeconds']));
             
 
             var max = Math.max(...values);
@@ -289,8 +303,9 @@ class HomeScreen extends Component{
             sum = sum - max - min;
 
             var ao5 = sum / 3;
-            ao5 = Number((ao5).toFixed(2));
-            this.setState({ao5: Number((ao5).toFixed(2))})
+            ao5 = ao5.toFixed(2);
+            if(ao5>60){ao5 = this.secToMin(ao5)}
+            this.setState({ao5: ao5})
             solve['ao5'] = ao5;
 
             if(solves.length >= 11)
@@ -300,9 +315,9 @@ class HomeScreen extends Component{
                 var values = [];
                 for (var i = 0; i < 11; i++){
                     var currentSolve = solves[i];
-                    values.push(parseFloat(currentSolve['time']));
+                    values.push(parseFloat(currentSolve['timeInSeconds']));
                 }
-                values.push(parseFloat(solve['time']));
+                values.push(parseFloat(solve['timeInSeconds']));
 
                 var max = Math.max(...values);
                 var min = Math.min(...values);
@@ -313,8 +328,9 @@ class HomeScreen extends Component{
                 sum = sum - max - min;
 
                 var ao12 = sum / 10;
-                ao12 = Number((ao12).toFixed(2));
-                this.setState({ao12: Number((ao12).toFixed(2))})
+                ao12 = ao12.toFixed(2);
+                if(ao12>60){ao12 = this.secToMin(ao12)}
+                this.setState({ao12: ao12})
                 solve['ao12'] = ao12;
 
                 if(solves.length >= 99)
@@ -324,9 +340,9 @@ class HomeScreen extends Component{
                     var values = [];
                     for (var i = 0; i < 99; i++){
                         var currentSolve = solves[i];
-                        values.push(parseFloat(currentSolve['time']));
+                        values.push(parseFloat(currentSolve['timeInSeconds']));
                     }
-                    values.push(parseFloat(solve['time']));
+                    values.push(parseFloat(solve['timeInSeconds']));
 
                     var max = Math.max(...values);
                     var min = Math.min(...values);
@@ -337,8 +353,9 @@ class HomeScreen extends Component{
                     sum = sum - max - min;
 
                     var ao100 = sum / 98;
-                    ao100 = Number((ao100).toFixed(2));
-                    this.setState({ao100:Number((ao100).toFixed(2))})
+                    ao100 = ao100.toFixed(2);
+                    if(ao100>60){ao100 = this.secToMin(ao100)}
+                    this.setState({ao100:ao100})
                     solve['ao100'] = ao100;
                 }
             }
@@ -362,7 +379,8 @@ class HomeScreen extends Component{
         var solveDate = moment().format('MMMM Do YYYY, h:mm:ss a');
         var solveScramble = this.state.scrambleText;
         var solveTime = this.state.hiddentTimerText;
-        var solve = {time: solveTime, scramble: solveScramble, date: solveDate, mean: '-', ao5: '-', ao12: '-', ao100: '-', cubeType: this.state.selectedCube};
+        
+        var solve = {time: solveTime, timeInSeconds:this.state.timeInSeconds, scramble: solveScramble, date: solveDate, mean: '-', ao5: '-', ao12: '-', ao100: '-', cubeType: this.state.selectedCube};
        
         var solves = await AsyncStorage.getItem("solves");
         if (solves == null ) {
@@ -427,18 +445,38 @@ class HomeScreen extends Component{
         var seconds = diff / 1000;
         var seconds = seconds.toFixed(2);
 
+        var timeInSeconds = seconds;
+
+        if(seconds > 60){seconds = this.secToMin(seconds)}
+
         var isTimerDisabled = this.state.isTimerDisabled;
         
         if(isTimerDisabled == false)
         {
-            this.setState({timerText: seconds, hiddentTimerText: seconds})
+            this.setState({timerText: seconds, hiddentTimerText: seconds, timeInSeconds: timeInSeconds})
         }
         else 
         {
-            this.setState({hiddentTimerText: seconds, timerText: ':)'})
+            this.setState({hiddentTimerText: seconds, timerText: ':)', timeInSeconds: timeInSeconds})
         }
     
         this.timerTimout = setTimeout(() => { this.handleStartTimer(); }, 10);
+    }
+
+    secToMin = (seconds) =>{
+        var result = '';
+        if(seconds > 60){
+            var minutes =  seconds / 60;
+            var minutesOnly = Math.floor(minutes);
+            var seconds = ((minutes % 1) * 60).toFixed(2);
+            if(seconds < 10){result = `${minutesOnly}:0${seconds}`}
+            else{result = `${minutesOnly}:${seconds}`}
+        }
+        else{
+            result = seconds
+        }
+        
+        return result;
     }
 
     setSelectedSession = async (itemValue, itemIndex) => {
@@ -733,6 +771,7 @@ class HomeScreen extends Component{
                         <Image style={styles.pagesButton} source={require('../assets/graph.png')}/>
                         </TouchableOpacity>
                     </PageNavigator>
+                    
                 </Container>
             </ThemeProvider>
             
@@ -744,14 +783,14 @@ const mapStateToProps = state => ({
     theme: state.themeReducer.theme
   })
   
-  const mapDispatchToProps = dispatch => ({
-    switchTheme: bindActionCreators(switchTheme, dispatch)
-  })
-  
-  export default connect(
-    mapStateToProps,
-    mapDispatchToProps
-  )(HomeScreen)
+const mapDispatchToProps = dispatch => ({
+switchTheme: bindActionCreators(switchTheme, dispatch)
+})
+
+export default connect(
+mapStateToProps,
+mapDispatchToProps
+)(HomeScreen)
 
 const styles = StyleSheet.create({
     scramble: {
