@@ -21,10 +21,10 @@ export const defaultTheme = {
   }
 export const redTheme = {
   mode: 'dark',
-  PRIMARY_BACKGROUND_COLOR: '#750000',
-  SECONDARY_BACKGROUND_COLOR: '#FF2400',
+  PRIMARY_BACKGROUND_COLOR: '#303030',
+  SECONDARY_BACKGROUND_COLOR: '#D10000',
   PRIMARY_TEXT_COLOR: '#ffffff',
-  SECONDARY_TEXT_COLOR: '#ffffff',
+  SECONDARY_TEXT_COLOR: '#000000',
 }
 export const cottonCandyTheme = {
   mode: 'light',

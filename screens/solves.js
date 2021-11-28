@@ -125,7 +125,7 @@ class SolvesScreen extends Component{
 
         if (itemValue == 'time')
         {
-            var filteredArray = this.state.solves.sort((a, b) => parseFloat(a.time) - parseFloat(b.time))
+            var filteredArray = this.state.solves.sort((a, b) => parseFloat(a.timeInSeconds) - parseFloat(b.timeInSeconds))
             
             this.setState({solves: filteredArray})
         }
@@ -271,7 +271,7 @@ const Container = styled.SafeAreaView`
 
 const PageNavigator = styled.View`
     position: absolute;
-    bottom: 50px;
+    bottom: 3%;
     flex-direction: row;
     justify-content: space-around;
     align-items: center;

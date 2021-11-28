@@ -70,6 +70,7 @@ class HomeScreen extends Component{
 
     }
     componentDidMount = async() =>{
+        await AsyncStorage.clear();
         this.getTheme();
 
         this.checkSwitches();
@@ -390,8 +391,11 @@ class HomeScreen extends Component{
         var solve = {time: solveTime, timeInSeconds:this.state.timeInSeconds, scramble: solveScramble, date: solveDate, mean: '-', meanInSeconds:0, ao5: '-', ao5InSeconds: 0, ao12: '-',ao12InSeconds: 0, ao100: '-',ao100InSeconds: 0, cubeType: this.state.selectedCube};
        
         var solves = await AsyncStorage.getItem("solves");
-        if (solves == null ) {
+        if (solves == null) {
             solve['mean'] = solve['time'];
+            var mean = solve['time'];
+            if(mean > 60){mean = this.secToMin(mean)};
+            solve['meanInSeconds'] = mean;
             var newSolves = {solves: [solve]};
             await AsyncStorage.setItem("solves", JSON.stringify(newSolves));
         }
@@ -536,6 +540,7 @@ class HomeScreen extends Component{
             sessions.push(session);
             sessions = {sessions: sessions}
             await AsyncStorage.setItem('sessions', JSON.stringify(sessions));
+            this.setState({modalCubeType: null});
         }
 
         
@@ -864,7 +869,7 @@ const Container = styled.SafeAreaView`
 
 const PageNavigator = styled.View`
     position: absolute;
-    bottom: 50px;
+    bottom: 3%;
     flex-direction: row;
     justify-content: space-around;
     align-items: center;
@@ -878,6 +883,7 @@ const ScrambleSelector = styled.Picker`
     backgroundColor: ${props => props.theme.SECONDARY_BACKGROUND_COLOR};
     borderRadius: 10px;
     width: 150px;
+    height: 40%;
 `
 const Selector = styled.Picker`
 backgroundColor: ${props => props.theme.SECONDARY_BACKGROUND_COLOR};
@@ -940,6 +946,6 @@ const AveragesText = styled.Text`
 `
 const TimerText = styled.Text`
     color: ${props => props.theme.PRIMARY_TEXT_COLOR};
-    fontSize: 50px;
+    fontSize: 75px;
     bottom: 25%;
 `

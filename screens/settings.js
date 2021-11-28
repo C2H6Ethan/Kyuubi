@@ -260,7 +260,7 @@ const Container = styled.SafeAreaView`
 
 const PageNavigator = styled.View`
     position: absolute;
-    bottom: 50px;
+    bottom: 3%;
     flex-direction: row;
     justify-content: space-around;
     align-items: center;
