@@ -3,6 +3,7 @@ import { Easing, Animated } from 'react-native';
 import { StackNavigator } from 'react-navigation'
 import {createMaterialTopTabNavigator} from 'react-navigation-tabs'
 import { NavigationContainer } from '@react-navigation/native';
+import { NavigationContext } from '@react-navigation/native';
 import { createStackNavigator } from 'react-navigation-stack';
 import { createAppContainer } from 'react-navigation';
 import HomeScreen from './screens/home';
@@ -77,10 +78,9 @@ export default class App extends Component {
   
   render(){
     return(
-      <Provider store={store}>
-        <NavigationApp/>
-      </Provider>
-      
+        <Provider store={store}>
+          <NavigationApp/>
+        </Provider>
     ) 
   }
 }

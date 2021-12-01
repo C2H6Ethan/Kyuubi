@@ -6,6 +6,7 @@ import { ScrollView, TouchableWithoutFeedback } from 'react-native-gesture-handl
 import moment from 'moment';
 import {Picker} from '@react-native-picker/picker';
 import BannerAd from "../Ads/BannerAdSettings";
+import { useFocusEffect } from '@react-navigation/native';
 
 import styled, { ThemeProvider } from 'styled-components/native'
 import { connect } from 'react-redux'
@@ -31,6 +32,7 @@ class SolvesScreen extends Component{
             solvesCount: 0,
         };
     }
+
 
     setModalVisible = async (visible, index) => {
         this.setState({ modalVisible: visible });

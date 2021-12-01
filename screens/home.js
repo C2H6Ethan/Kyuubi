@@ -12,7 +12,7 @@ import BannerAd from "../Ads/BannerAdHome";
 import styled, { ThemeProvider } from 'styled-components/native'
 import { connect } from 'react-redux'
 import { bindActionCreators } from 'redux'
-import { switchTheme } from '../redux/actions'
+import { switchTheme, test } from '../redux/actions'
 import { darkTheme, lightTheme, defaultTheme, redTheme, avocadoTheme, cottonCandyTheme } from '../styles/theme'
 
 var scrambo = new Scrambo();
@@ -70,6 +70,7 @@ class HomeScreen extends Component{
 
     }
     componentDidMount = async() =>{
+        this.props.test();
         this.getTheme();
 
         this.checkSwitches();

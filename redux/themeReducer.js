@@ -5,7 +5,7 @@ const initialState = {
   theme: { ...defaultTheme }
 }
 
-const themeReducer = (state = initialState, action) => {
+themeReducer = (state = initialState, action) => {
   switch (action.type) {
     case SWITCH_THEME:
       let newState = {
