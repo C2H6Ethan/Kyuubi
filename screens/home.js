@@ -70,7 +70,6 @@ class HomeScreen extends Component{
 
     }
     componentDidMount = async() =>{
-        await AsyncStorage.clear();
         this.getTheme();
 
         this.checkSwitches();
@@ -939,6 +938,8 @@ const AddCubeTypeButton = styled.TouchableOpacity`
 
 const SrambleText = styled.Text`
     color: ${props => props.theme.PRIMARY_TEXT_COLOR};
+    fontSize: 20px;
+    textAlign: center;
 `
 const AveragesText = styled.Text`
     color: ${props => props.theme.PRIMARY_TEXT_COLOR};

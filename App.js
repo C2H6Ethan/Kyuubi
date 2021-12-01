@@ -1,6 +1,7 @@
 import React, { Component } from 'react';
 import { Easing, Animated } from 'react-native';
 import { StackNavigator } from 'react-navigation'
+import {createMaterialTopTabNavigator} from 'react-navigation-tabs'
 import { NavigationContainer } from '@react-navigation/native';
 import { createStackNavigator } from 'react-navigation-stack';
 import { createAppContainer } from 'react-navigation';
@@ -18,13 +19,37 @@ const store = createStore(
   applyMiddleware(thunk)
 )
 
+const SwipeTabs = createMaterialTopTabNavigator(
+  {
+    SettingsScreen: {
+      screen: SettingsScreen
+    },
+    HomeScreen: {
+      screen: HomeScreen,
+        navigationOptions: {},
+    },
+    SolvesScreen: {
+      screen: SolvesScreen
+    },
+  },
+  {
+    initialRouteName: "HomeScreen",
+    animationEnabled: true,
+    tabBarOptions: {
+      showLabel: false,
+      showIcon: false,
+      style: { height: 0 }
+    }
+  }
+);
+
 
 const screens = {
   HomeScreen: {
     screen: HomeScreen,
       navigationOptions: {
         headerShown: false,
-        gestureEnabled: false,
+        gestureEnabled: true,
       },
   },
   SettingsScreen: {
@@ -32,21 +57,21 @@ const screens = {
       navigationOptions: {
         headerShown: false,
         gestureDirection: 'horizontal-inverted',
-        gestureEnabled: false,
+        gestureEnabled: true,
       },
   },
   SolvesScreen: {
     screen: SolvesScreen,
       navigationOptions: {
         headerShown: false,
-        gestureEnabled: false,
+        gestureEnabled: true,
       },
   },
 }
 
 const HomeStack = createStackNavigator(screens);
 HomeStack.navigationOptions={navigationOptions: {headerShown:false}};
-const NavigationApp = createAppContainer(HomeStack);
+const NavigationApp = createAppContainer(SwipeTabs);
 
 export default class App extends Component {
   
