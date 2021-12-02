@@ -15,7 +15,8 @@ export const switchTheme = BaseTheme => {
 export const test = () => {
   return dispatch => {
     dispatch({
-      type: TEST
+      type: TEST,
+      testvar: 'wohoo'
     })
   }
 }

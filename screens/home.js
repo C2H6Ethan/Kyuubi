@@ -70,7 +70,8 @@ class HomeScreen extends Component{
 
     }
     componentDidMount = async() =>{
-        this.props.test();
+        var test = this.props.test();
+        console.warn(this.test)
         this.getTheme();
 
         this.checkSwitches();

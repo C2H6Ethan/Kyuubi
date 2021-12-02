@@ -14,9 +14,10 @@ import { Provider } from 'react-redux'
 import { createStore, applyMiddleware, combineReducers } from 'redux'
 import thunk from 'redux-thunk'
 import themeReducer from './redux/themeReducer'
+import test from './redux/test'
 
 const store = createStore(
-  combineReducers({ themeReducer }),
+  combineReducers({ themeReducer, test }),
   applyMiddleware(thunk)
 )
 
