@@ -12,14 +12,17 @@ import BannerAd from "../Ads/BannerAdHome";
 import styled, { ThemeProvider } from 'styled-components/native'
 import { connect } from 'react-redux'
 import { bindActionCreators } from 'redux'
-import { switchTheme, test } from '../redux/actions'
+import { switchTheme } from '../redux/actions'
 import { darkTheme, lightTheme, defaultTheme, redTheme, avocadoTheme, cottonCandyTheme } from '../styles/theme'
+
+import { MyContext } from "../context";
 
 var scrambo = new Scrambo();
 var cube = new Cube();
 var faces = (cube.asString()).split('')
 
 class HomeScreen extends Component{
+    static contextType = MyContext;
 
     constructor (props){
         super(props);
@@ -70,13 +73,11 @@ class HomeScreen extends Component{
 
     }
     componentDidMount = async() =>{
-        var test = this.props.test();
-        console.warn(this.test)
         this.getTheme();
 
         this.checkSwitches();
 
-        this.displayAverages();
+        this.context.displayAverages();
 
         this.getSessions();
 
@@ -169,84 +170,6 @@ class HomeScreen extends Component{
         'B': 'blue',
     }
 
-    displayAverages = async () => {
-        
-        //get averages
-        var solves = await AsyncStorage.getItem("solves");
-        if (solves != null)
-        {
-        solves = JSON.parse(solves);
-        solves = solves['solves'];
-
-        //filter solves with cube type
-        var filteredArray = []
-        solves.forEach(solve => {
-            if (solve['cubeType'] == this.state.selectedCube){filteredArray.push(solve)}
-        });
-        solves = filteredArray;
-
-        if (solves.length > 0){
-            solves.reverse();
-            lastSolve = solves[0];
-            this.setState({currentSolve: lastSolve['time'], mean: lastSolve['mean'], ao5: lastSolve['ao5'], ao12: lastSolve['ao12'], ao100: lastSolve['ao100']})
-        
-
-            //get best averages
-            var times = [];
-            var means = [];
-            var ao5s = [];
-            var ao12s = [];
-            var ao100s = [];
-
-            var minAo5 = '-';
-            var minAo12 = '-';
-            var minAo100 = '-';
-
-            solves.forEach(element => {
-                times.push(Number(element['timeInSeconds']));
-                means.push(Number(element['meanInSeconds']));
-                if (solves.length >= 5)
-                {
-                if (!Number(element['ao5InSeconds']) == 0){
-                        ao5s.push(Number(element['ao5InSeconds']));
-                    } 
-
-                    minAo5 =  Math.min(...ao5s);
-                    if(minAo5>60){minAo5 = this.secToMin(minAo5)}
-                }
-                
-                if (solves.length >= 12)
-                {
-                if (! Number(element['ao12InSeconds']) == 0){
-                        ao12s.push(Number(element['ao12InSeconds']));
-                    } 
-
-                    minAo12 = Math.min(...ao12s);
-                    if(minAo12>60){minAo12 = this.secToMin(minAo12)}
-                }
-
-                if (solves.length >= 100)
-                {
-                    if (! Number(element['ao100InSeconds']) == 0){
-                        ao100s.push(Number(element['ao100InSeconds']));
-                    }
-
-                    minAo100 = Math.min(...ao100s);
-                    if(minAo100>60){minAo100 = this.secToMin(minAo100)}
-                }
-                
-                
-            });
-            var minTime = Math.min(...times);
-            if(minTime>60){minTime = this.secToMin(minTime)}
-
-            var minMean = Math.min(...means);
-            if(minMean>60){minMean = this.secToMin(minMean)}
-            this.setState({bestSolve: minTime, bestMean: minMean, bestAo5: minAo5, bestAo12: minAo12, bestAo100: minAo100})
-        }
-        else{this.setState({currentSolve: '-', mean: '-', ao5: '-', ao12: '-', ao100: '-', bestSolve: '-', bestMean: '-', bestAo5: '-', bestAo12: '-', bestAo100: '-'})}
-        }
-    }
 
     checkSwitches = async () => {
         var isTimerDisabledValue = await AsyncStorage.getItem("isTimerDisabled");
@@ -408,9 +331,11 @@ class HomeScreen extends Component{
             var newSolves = {solves : solves};
             await AsyncStorage.setItem("solves", JSON.stringify(newSolves));
         }
+        // refresh context solves
+        this.context.getSolves();
 
         // display new averages
-        this.displayAverages();
+        this.context.displayAverages();
         // set new scramble
         this.getScramble();
 
@@ -493,6 +418,8 @@ class HomeScreen extends Component{
 
     setSelectedSession = async (itemValue, itemIndex) => {
         await AsyncStorage.setItem('selectedCube', itemValue);
+        this.context.setSelectedCube(itemValue);
+        this.context.getSolves();
 
         //find scramble type
         var scrambleType = null;
@@ -503,7 +430,7 @@ class HomeScreen extends Component{
 
         this.setState({selectedCube: itemValue, selectedSessionIndex: itemIndex, selectedSession: selectedSession})
 
-        this.displayAverages();
+        this.context.displayAverages();
         this.getScramble();
     }
 
@@ -573,9 +500,33 @@ class HomeScreen extends Component{
 
             var newSolves = {solves: filteredArray};
             await AsyncStorage.setItem('solves', JSON.stringify(newSolves));
-            await this.displayAverages();
         }
     } 
+
+    deleteLastSessionSolves = async () => {
+        var index = this.state.selectedSessionIndex;
+        var sessions = this.state.sessions;
+        var sessionToDelete = sessions[index];
+
+        // delete solves
+        var solves = await AsyncStorage.getItem('solves');
+        if (solves != null){
+            solves = JSON.parse(solves);
+            solves = solves['solves'];
+
+            //filter solves with cube type
+            var filteredArray = []
+            solves.forEach(solve => {
+                if (solve['cubeType'] != sessionToDelete['name']){filteredArray.push(solve)}
+            });
+
+            var newSolves = {solves: filteredArray};
+            await AsyncStorage.setItem('solves', JSON.stringify(newSolves));
+        }
+
+        this.context.getSolves();
+        this.context.displayAverages();
+    }
 
     deleteSessionAlert = () =>{
         var sessions = this.state.sessions;
@@ -594,7 +545,17 @@ class HomeScreen extends Component{
             );
         }
         else {
-            this.errorAlert("You must have at least 1 session");
+            Alert.alert(
+                "Error",
+                "You can't delete your last Session. Do you want to delete your Solves instead?",
+                [
+                    {
+                    text: "No",
+                    style: "cancel"
+                    },
+                    { text: "Yes", onPress: () => this.deleteLastSessionSolves() }
+                ]
+            );
         }
     }
 
@@ -623,128 +584,140 @@ class HomeScreen extends Component{
         });
 
         return (
-            <ThemeProvider theme={this.props.theme}>
-                <Container>
-                    <Modal
-                        animationType="slide"
-                        transparent={true}
-                        visible={modalVisible}
-                        onRequestClose={() => {
-                            this.setModalVisible(!modalVisible);
-                        }}
-                        >
-                        <TouchableOpacity activeOpacity={1} onPress={() => this.setModalVisible(!modalVisible)} style={{flex: 1,justifyContent: 'center',alignItems: 'center'}}>
-                        <TouchableOpacity activeOpacity={1} style={{width: '60%', height: '40%'}}>
-                        <KeyboardAvoidingView
-                            style={styles.centeredView}
-                            behavior={Platform.OS === "ios" ? "padding" : "height"}
-                        >
-                            <ModalView>
-                                <ModalTextInput
-                                    placeholder="session name"
-                                    placeholderTextColor="lightgray" 
-                                    onChangeText={ text => this.setState({modalCubeType: text})}
-                                />
-                                <ScrambleSelector
-                                itemStyle={{height: 100}}
-                                    selectedValue={this.state.selectedScramble}
-                                    onValueChange={(itemValue, itemIndex) => this.setSelectedScramble(itemValue, itemIndex)}
-
-                                >
-                                    {scrambleCodes}
-                                </ScrambleSelector>
-                                <ModalButton
-                                    onPress={() => this.addCubeType()}
-                                >
-                                    <TextStyle>Add</TextStyle>
-                                </ModalButton>
-                            </ModalView>
-                        </KeyboardAvoidingView>
-                        </TouchableOpacity>
-                        </TouchableOpacity>
-                    </Modal>
-
-
-                    <View style={styles.cubeSelectionContainer}>
-                        <AddCubeTypeButton activeOpacity={1}onPress={() => this.deleteSessionAlert()}>
-                            <Text>x</Text>
-                        </AddCubeTypeButton>
-
-                        <Selector
-                        itemStyle={{height: 44}}
-                            selectedValue={this.state.selectedCube}
-                            onValueChange={(itemValue, itemIndex) => this.setSelectedSession(itemValue, itemIndex)}
-
-                        >
-                            {cubeTypes}
-                        </Selector>
-
-                        <AddCubeTypeButton activeOpacity={1} onPress={() => this.setModalVisible(true)}>
-                            <Text>+</Text>
-                        </AddCubeTypeButton>
-                    </View>
-                    
-
-                    <TouchableOpacity activeOpacity={1} style={styles.scramble} onPress={this.handleNewScramble}>
-                        <SrambleText>{this.state.scrambleText}</SrambleText>
-                    </TouchableOpacity>
-                    <TouchableOpacity activeOpacity={1} style={styles.timer} onPressIn={this.handleTimerPressIn} onPressOut={this.handleTimerPressOut}>
-                        <TimerText style={this.state.timerStyle}>{this.state.timerText}</TimerText>
-                    </TouchableOpacity>
-                    <StatusBar style="auto" />
-
-                    <View style={styles.averages}>
-                        <View>
-                            <AveragesText>current: {this.state.currentSolve}</AveragesText>
-                            <AveragesText>mean: {this.state.mean}</AveragesText>
-                            <AveragesText>ao5: {this.state.ao5}</AveragesText>
-                            <AveragesText>ao12: {this.state.ao12}</AveragesText>
-                            <AveragesText>ao100: {this.state.ao100}</AveragesText>
+            <MyContext.Consumer>
+                {context => (
+                    <ThemeProvider theme={this.props.theme}>
+                    <Container>
+                        <Modal
+                            animationType="slide"
+                            transparent={true}
+                            visible={modalVisible}
+                            onRequestClose={() => {
+                                this.setModalVisible(!modalVisible);
+                            }}
+                            >
+                            <TouchableOpacity activeOpacity={1} onPress={() => this.setModalVisible(!modalVisible)} style={{flex: 1,justifyContent: 'center',alignItems: 'center'}}>
+                            <TouchableOpacity activeOpacity={1} style={{width: '60%', height: '40%'}}>
+                            <KeyboardAvoidingView
+                                style={styles.centeredView}
+                                behavior={Platform.OS === "ios" ? "padding" : "height"}
+                            >
+                                <ModalView>
+                                    <ModalTextInput
+                                        placeholder="session name"
+                                        placeholderTextColor="lightgray" 
+                                        onChangeText={ text => this.setState({modalCubeType: text})}
+                                    />
+                                    <ScrambleSelector
+                                    itemStyle={{height: 100}}
+                                        selectedValue={this.state.selectedScramble}
+                                        onValueChange={(itemValue, itemIndex) => this.setSelectedScramble(itemValue, itemIndex)}
+    
+                                    >
+                                        {scrambleCodes}
+                                    </ScrambleSelector>
+                                    <ModalButton
+                                        onPress={() => this.addCubeType()}
+                                    >
+                                        <TextStyle>Add</TextStyle>
+                                    </ModalButton>
+                                </ModalView>
+                            </KeyboardAvoidingView>
+                            </TouchableOpacity>
+                            </TouchableOpacity>
+                        </Modal>
+    
+    
+                        <View style={styles.cubeSelectionContainer}>
+                            <AddCubeTypeButton activeOpacity={1}onPress={() => this.deleteSessionAlert()}>
+                                <Text>x</Text>
+                            </AddCubeTypeButton>
+    
+                            <Selector
+                            itemStyle={{height: 44}}
+                                selectedValue={this.state.selectedCube}
+                                onValueChange={(itemValue, itemIndex) => this.setSelectedSession(itemValue, itemIndex)}
+    
+                            >
+                                {cubeTypes}
+                            </Selector>
+    
+                            <AddCubeTypeButton activeOpacity={1} onPress={() => this.setModalVisible(true)}>
+                                <Text>+</Text>
+                            </AddCubeTypeButton>
                         </View>
-
-
-                        <View style={styles.scrambleImage}>
-                            <View style={styles.faces}>
-                            {
-                                this.state.uFace.map((item, index) =>{
-                                return (
-                                    <Square color={this.colorJSON[item]}/>
-                                )
-                                })
-                            }
+                        
+    
+                        <TouchableOpacity activeOpacity={1} style={styles.scramble} onPress={this.handleNewScramble}>
+                            <SrambleText>{this.state.scrambleText}</SrambleText>
+                        </TouchableOpacity>
+                        <TouchableOpacity activeOpacity={1} style={styles.timer} onPressIn={this.handleTimerPressIn} onPressOut={this.handleTimerPressOut}>
+                            <TimerText style={this.state.timerStyle}>{this.state.timerText}</TimerText>
+                        </TouchableOpacity>
+                        <StatusBar style="auto" />
+    
+                        <View style={styles.averages}>
+                            <View>
+                                <AveragesText>current: {context.currentSolve}</AveragesText>
+                                <AveragesText>mean: {context.mean}</AveragesText>
+                                <AveragesText>ao5: {context.ao5}</AveragesText>
+                                <AveragesText>ao12: {context.ao12}</AveragesText>
+                                <AveragesText>ao100: {context.ao100}</AveragesText>
                             </View>
-                            <View style={styles.middleFaces}>
-                            
+    
+    
+                            <View style={styles.scrambleImage}>
                                 <View style={styles.faces}>
                                 {
-                                    this.state.lFace.map((item, index) =>{
+                                    this.state.uFace.map((item, index) =>{
                                     return (
                                         <Square color={this.colorJSON[item]}/>
                                     )
                                     })
                                 }
                                 </View>
-                                <View style={styles.faces}>
-                                {
-                                    this.state.fFace.map((item, index) =>{
-                                    return (
-                                        <Square color={this.colorJSON[item]}/>
-                                    )
-                                    })
-                                }
+                                <View style={styles.middleFaces}>
+                                
+                                    <View style={styles.faces}>
+                                    {
+                                        this.state.lFace.map((item, index) =>{
+                                        return (
+                                            <Square color={this.colorJSON[item]}/>
+                                        )
+                                        })
+                                    }
+                                    </View>
+                                    <View style={styles.faces}>
+                                    {
+                                        this.state.fFace.map((item, index) =>{
+                                        return (
+                                            <Square color={this.colorJSON[item]}/>
+                                        )
+                                        })
+                                    }
+                                    </View>
+                                    <View style={styles.faces}>
+                                    {
+                                        this.state.rFace.map((item, index) =>{
+                                        return (
+                                            <Square color={this.colorJSON[item]}/>
+                                        )
+                                        })
+                                    }
+                                    </View>
+                                    <View style={styles.faces}>
+                                    {
+                                        this.state.bFace.map((item, index) =>{
+                                        return (
+                                            <Square color={this.colorJSON[item]}/>
+                                        )
+                                        })
+                                    }
+                                    </View>
                                 </View>
                                 <View style={styles.faces}>
                                 {
-                                    this.state.rFace.map((item, index) =>{
-                                    return (
-                                        <Square color={this.colorJSON[item]}/>
-                                    )
-                                    })
-                                }
-                                </View>
-                                <View style={styles.faces}>
-                                {
-                                    this.state.bFace.map((item, index) =>{
+                                    this.state.dFace.map((item, index) =>{
                                     return (
                                         <Square color={this.colorJSON[item]}/>
                                     )
@@ -752,41 +725,33 @@ class HomeScreen extends Component{
                                 }
                                 </View>
                             </View>
-                            <View style={styles.faces}>
-                            {
-                                this.state.dFace.map((item, index) =>{
-                                return (
-                                    <Square color={this.colorJSON[item]}/>
-                                )
-                                })
-                            }
+    
+    
+                            <View>
+                                <AveragesText>best: {context.bestSolve}</AveragesText>
+                                <AveragesText>mean: {context.bestMean}</AveragesText>
+                                <AveragesText>ao5: {context.bestAo5}</AveragesText>
+                                <AveragesText>ao12: {context.bestAo12}</AveragesText>
+                                <AveragesText>ao100: {context.bestAo100}</AveragesText>
                             </View>
                         </View>
-
-
-                        <View>
-                            <AveragesText>best: {this.state.bestSolve}</AveragesText>
-                            <AveragesText>mean: {this.state.bestMean}</AveragesText>
-                            <AveragesText>ao5: {this.state.bestAo5}</AveragesText>
-                            <AveragesText>ao12: {this.state.bestAo12}</AveragesText>
-                            <AveragesText>ao100: {this.state.bestAo100}</AveragesText>
-                        </View>
-                    </View>
-
-                    <PageNavigator>
-                        <TouchableOpacity onPress={() => this.props.navigation.navigate('SettingsScreen')}>
-                            <Image style={styles.pagesButton} source={require('../assets/settings.png')}/>
-                        </TouchableOpacity>
-                        <TouchableOpacity>
-                            <Image style={styles.pagesButtonClicked} source={require('../assets/home.png')}/>
-                        </TouchableOpacity>
-                        <TouchableOpacity onPress={() => this.props.navigation.navigate('SolvesScreen')}>
-                        <Image style={styles.pagesButton} source={require('../assets/graph.png')}/>
-                        </TouchableOpacity>
-                    </PageNavigator>
-                    
-                </Container>
-            </ThemeProvider>
+    
+                        <PageNavigator>
+                            <TouchableOpacity onPress={() => this.props.navigation.navigate('SettingsScreen')}>
+                                <Image style={styles.pagesButton} source={require('../assets/settings.png')}/>
+                            </TouchableOpacity>
+                            <TouchableOpacity>
+                                <Image style={styles.pagesButtonClicked} source={require('../assets/home.png')}/>
+                            </TouchableOpacity>
+                            <TouchableOpacity onPress={() => this.props.navigation.navigate('SolvesScreen')}>
+                            <Image style={styles.pagesButton} source={require('../assets/graph.png')}/>
+                            </TouchableOpacity>
+                        </PageNavigator>
+                    </Container>
+                </ThemeProvider>
+                )}
+            
+            </MyContext.Consumer>
             
             )
     }

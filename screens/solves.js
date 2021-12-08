@@ -13,7 +13,11 @@ import { connect } from 'react-redux'
 import { bindActionCreators } from 'redux'
 import { switchTheme } from '../redux/actions'
 
+import { MyContext } from "../context";
+
 class SolvesScreen extends Component{
+    static contextType = MyContext;
+
     constructor(props){
         super(props);
 
@@ -40,32 +44,13 @@ class SolvesScreen extends Component{
         if (visible)
         {
             // set solve data
-           var solves = this.state.solves;
+           var solves = this.context.solves;
            var solve = solves[index];
            this.setState({modalTime: solve['time'], modalDate: solve['date'], modalScramble: solve['scramble'],  modalCubeType: solve['cubeType'],currentSolveIndex: index,});
     
         }
     }
     componentDidMount = async () => {
-
-        var solves = await AsyncStorage.getItem('solves');
-        if (solves != null){
-            solves = JSON.parse(solves);
-            solves = solves['solves'];
-
-            //filter solves with cube type
-            var cubeType = await AsyncStorage.getItem('selectedCube');
-            var filteredArray = []
-
-            solves.forEach(solve => {
-                if (solve['cubeType'] == cubeType){filteredArray.push(solve)}
-            });
-
-            var solvesCount = filteredArray.length;
-
-            filteredArray.reverse();
-            this.setState({solves: filteredArray, solvesCount: solvesCount});
-        }
         var filterItem = await AsyncStorage.getItem('filterItem');
 
 
@@ -77,16 +62,17 @@ class SolvesScreen extends Component{
     }
 
     deleteSolve = async (index) => {
-        let itemsCopy = this.state.solves;
+        let itemsCopy = this.context.solves;
         var solveToDelete = itemsCopy[index];
         itemsCopy.splice(index, 1);
 
 
         // change solves counter
-        var solvesCount = this.state.solvesCount;
+        var solvesCount = this.context.solvesCount;
         solvesCount -= 1;
 
-        this.setState({solves: itemsCopy, solvesCount: solvesCount});
+        this.context.setSolves(itemsCopy);
+        this.context.setSolvesCount(solvesCount);
 
         var solves = await AsyncStorage.getItem('solves');
         solves = JSON.parse(solves);
@@ -103,14 +89,14 @@ class SolvesScreen extends Component{
 
         var solvesToSave = {solves: newSolves};
         await AsyncStorage.setItem('solves', JSON.stringify(solvesToSave));
+        this.context.displayAverages();
 
         this.setModalVisible(false, null);
     }
 
     lapsList() {
-
-        if(this.state.solves.length > 0){
-            return this.state.solves.map((data, index) => {
+        if(this.context.solves.length > 0){
+            return this.context.solves.map((data, index) => {
                 return (
                     <Times key={index} onPress={() => this.setModalVisible(true, index)}>
                       <TimeText>{data.time}</TimeText> 
@@ -118,7 +104,6 @@ class SolvesScreen extends Component{
                 )
               })
         }
-    
     }
 
     setSelectedValue = async (itemValue) => {
@@ -127,9 +112,9 @@ class SolvesScreen extends Component{
 
         if (itemValue == 'time')
         {
-            var filteredArray = this.state.solves.sort((a, b) => parseFloat(a.timeInSeconds) - parseFloat(b.timeInSeconds))
+            var filteredArray = this.context.solves.sort((a, b) => parseFloat(a.timeInSeconds) - parseFloat(b.timeInSeconds))
             
-            this.setState({solves: filteredArray})
+            this.context.setSolves(filteredArray);
         }
         else if (itemValue == 'date')
         {
@@ -147,7 +132,7 @@ class SolvesScreen extends Component{
                 });
 
                 filteredArray.reverse();
-                this.setState({solves: filteredArray});
+                this.context.setSolves(filteredArray);
             }
         }
     }
@@ -157,67 +142,71 @@ class SolvesScreen extends Component{
         const { navigate } = this.props.navigation;
         const { modalVisible } = this.state;
         return (
-            <ThemeProvider theme={this.props.theme}>
-                <Container>
-                    <Modal
-                    animationType="slide"
-                    transparent={true}
-                    visible={modalVisible}
-                    onRequestClose={() => {
-                        this.setModalVisible(!modalVisible);
-                    }}
-                    >
-                    <TouchableOpacity activeOpacity={1} onPress={() => this.setModalVisible(!modalVisible)} style={{flex: 1,justifyContent: 'center',alignItems: 'center'}}>
-                    <TouchableOpacity activeOpacity={1} style={{width: 375, height: 250}}>
-                    <View style={styles.centeredView}>
-                        <ModalView>
-                        <ModalScrambleText>{this.state.modalTime}</ModalScrambleText>
-                        <ModalText>{this.state.modalCubeType}</ModalText>
-                        <ModalText>{this.state.modalScramble}</ModalText>
-                        <ModalText>{this.state.modalDate}</ModalText>
-                            <ButtonClose
-                            onPress={() => this.deleteSolve(this.state.currentSolveIndex)}
+            <MyContext.Consumer>
+                {context => (
+                    <ThemeProvider theme={this.props.theme}>
+                    <Container>
+                        <Modal
+                        animationType="slide"
+                        transparent={true}
+                        visible={modalVisible}
+                        onRequestClose={() => {
+                            this.setModalVisible(!modalVisible);
+                        }}
                         >
-                            <TextStyle>Delete</TextStyle>
-                        </ButtonClose>
-                        </ModalView>
-                    </View>
-                    </TouchableOpacity>
-                    </TouchableOpacity>
-                    </Modal>
-
-                            <Filter
-                            itemStyle={{height: 44}}
-                                selectedValue={this.state.selectedValue}
-                                onValueChange={(itemValue, itemIndex) => this.setSelectedValue(itemValue)}
+                        <TouchableOpacity activeOpacity={1} onPress={() => this.setModalVisible(!modalVisible)} style={{flex: 1,justifyContent: 'center',alignItems: 'center'}}>
+                        <TouchableOpacity activeOpacity={1} style={{width: 375, height: 250}}>
+                        <View style={styles.centeredView}>
+                            <ModalView>
+                            <ModalScrambleText>{this.state.modalTime}</ModalScrambleText>
+                            <ModalText>{this.state.modalCubeType}</ModalText>
+                            <ModalText>{this.state.modalScramble}</ModalText>
+                            <ModalText>{this.state.modalDate}</ModalText>
+                                <ButtonClose
+                                onPress={() => this.deleteSolve(this.state.currentSolveIndex)}
                             >
-                                <Picker.Item label="Date" value="date" />
-                                <Picker.Item label="Time" value="time" />
-                            </Filter>
-
-                            <View>
-                                <SolvesCount>{this.state.solvesCount} Solves</SolvesCount>
-                            </View>
-
-                            <ScrollView>
-                                <View style={styles.timesContainer}>
-                                    {this.lapsList()}
+                                <TextStyle>Delete</TextStyle>
+                            </ButtonClose>
+                            </ModalView>
+                        </View>
+                        </TouchableOpacity>
+                        </TouchableOpacity>
+                        </Modal>
+    
+                                <Filter
+                                itemStyle={{height: 44}}
+                                    selectedValue={this.state.selectedValue}
+                                    onValueChange={(itemValue, itemIndex) => this.setSelectedValue(itemValue)}
+                                >
+                                    <Picker.Item label="Date" value="date" />
+                                    <Picker.Item label="Time" value="time" />
+                                </Filter>
+    
+                                <View>
+                                    <SolvesCount>{context.solvesCount} Solves</SolvesCount>
                                 </View>
-                            </ScrollView>
-                            
-                            <PageNavigator>
-                                <TouchableOpacity onPress={() => this.props.navigation.navigate('SettingsScreen')}>
-                                    <Image style={styles.pagesButton} source={require('../assets/settings.png')}/>
-                                </TouchableOpacity>
-                                <TouchableOpacity onPress={() => this.props.navigation.navigate('HomeScreen')}>
-                                    <Image style={styles.pagesButton} source={require('../assets/home.png')}/>
-                                </TouchableOpacity>
-                                <TouchableOpacity>
-                                <Image style={styles.pagesButtonClicked} source={require('../assets/graph.png')}/>
-                                </TouchableOpacity>
-                            </PageNavigator>
-                        </Container>
-            </ThemeProvider>
+    
+                                <ScrollView>
+                                    <View style={styles.timesContainer}>
+                                        {this.lapsList()}
+                                    </View>
+                                </ScrollView>
+                                
+                                <PageNavigator>
+                                    <TouchableOpacity onPress={() => this.props.navigation.navigate('SettingsScreen')}>
+                                        <Image style={styles.pagesButton} source={require('../assets/settings.png')}/>
+                                    </TouchableOpacity>
+                                    <TouchableOpacity onPress={() => this.props.navigation.navigate('HomeScreen')}>
+                                        <Image style={styles.pagesButton} source={require('../assets/home.png')}/>
+                                    </TouchableOpacity>
+                                    <TouchableOpacity>
+                                    <Image style={styles.pagesButtonClicked} source={require('../assets/graph.png')}/>
+                                    </TouchableOpacity>
+                                </PageNavigator>
+                            </Container>
+                </ThemeProvider>
+                )}
+            </MyContext.Consumer>
         )
     }
 }
