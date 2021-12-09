@@ -78,7 +78,6 @@ export default class App extends Component {
 
   componentDidMount = async() => {
     this.getSolves();
-    
   }
 
   getSolves = async() => {
@@ -88,7 +87,7 @@ export default class App extends Component {
       solves = solves['solves'];
 
       //filter solves with cube type
-      var cubeType = await AsyncStorage.getItem('selectedCube');
+      var cubeType = this.state.selectedCube;
       var filteredArray = []
 
       solves.forEach(solve => {
