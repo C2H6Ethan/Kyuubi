@@ -19,7 +19,7 @@
     "ios": {
       "supportsTablet": true,
       "config": {
-        "googleMobileAdsAppId": "ca-app-pub-3940256099942544~1458002511"
+        "googleMobileAdsAppId": "ca-app-pub-9310152642296392~2238553517"
       },
       "bundleIdentifier": "com.c2h6.Kyuubi"
     },

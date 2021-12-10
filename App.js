@@ -10,6 +10,7 @@ import HomeScreen from './screens/home';
 import SettingsScreen from './screens/settings';
 import SolvesScreen from './screens/solves';
 import AsyncStorage  from "@react-native-async-storage/async-storage";
+import RNIap from 'react-native-iap';
 
 import { Provider } from 'react-redux'
 import { createStore, applyMiddleware, combineReducers } from 'redux'

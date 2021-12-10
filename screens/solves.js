@@ -146,6 +146,7 @@ class SolvesScreen extends Component{
                 {context => (
                     <ThemeProvider theme={this.props.theme}>
                     <Container>
+                    <BannerAd/>
                         <Modal
                         animationType="slide"
                         transparent={true}

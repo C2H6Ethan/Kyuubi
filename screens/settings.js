@@ -163,6 +163,7 @@ class SettingsScreen extends Component{
         return (
             <ThemeProvider theme={this.props.theme}>
                 <Container>
+                <BannerAd/>
                     <StatusBar style="auto" />
                     <View style={styles.settings}>
                         <SettingWrapper>

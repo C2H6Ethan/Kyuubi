@@ -3,7 +3,7 @@ import { Platform, View } from "react-native";
 import { AdMobBanner } from "expo-ads-admob";
 const BannerAd = () => {
   const unitID = Platform.select({
-     ios: "ca-app-pub-3940256099942544/2934735716",
+     ios: "ca-app-pub-9310152642296392/6281864018",
   });
  
   return (
