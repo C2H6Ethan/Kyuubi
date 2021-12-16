@@ -20,3 +20,5 @@ const BannerAd = () => {
 };
 
 export default BannerAd;
+
+

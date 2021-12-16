@@ -10,7 +10,6 @@ import HomeScreen from './screens/home';
 import SettingsScreen from './screens/settings';
 import SolvesScreen from './screens/solves';
 import AsyncStorage  from "@react-native-async-storage/async-storage";
-import RNIap from 'react-native-iap';
 
 import { Provider } from 'react-redux'
 import { createStore, applyMiddleware, combineReducers } from 'redux'
@@ -18,6 +17,9 @@ import thunk from 'redux-thunk'
 import themeReducer from './redux/themeReducer'
 
 import { MyContext } from "./context";
+import IAP from 'react-native-iap';
+
+const productIds = [ 'com.kyuubi.removeAds']
 
 const store = createStore(
   combineReducers({ themeReducer}),
@@ -74,11 +76,18 @@ export default class App extends Component {
         bestAo100: '-',
 
         selectedCube: '3x3',
+
+        showAds: true,
+
+        inspection: false,
     };
   }
 
   componentDidMount = async() => {
     this.getSolves();
+    IAP.getProducts(productIds).then((res) => {
+      console.warn(res);
+    });
   }
 
   getSolves = async() => {
@@ -112,6 +121,10 @@ export default class App extends Component {
 
   setSelectedCube = (cubeType) => {
     this.setState({selectedCube: cubeType})
+  }
+
+  setInspection = (inspection) => {
+    this.setState({inspection: inspection})
   }
 
   displayAverages = async () => {
@@ -196,7 +209,7 @@ export default class App extends Component {
   
   render(){
     return(
-      <MyContext.Provider value={{...this.state, setSolves: this.setSolves, getSolves: this.getSolves, setSolvesCount: this.setSolvesCount, displayAverages: this.displayAverages, setSelectedCube: this.setSelectedCube}}>
+      <MyContext.Provider value={{...this.state, setSolves: this.setSolves, getSolves: this.getSolves, setSolvesCount: this.setSolvesCount, displayAverages: this.displayAverages, setSelectedCube: this.setSelectedCube, setInspection: this.setInspection}}>
         <Provider store={store}>
           <NavigationApp/>
         </Provider>

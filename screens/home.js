@@ -37,6 +37,7 @@ class HomeScreen extends Component{
             originalTimerColor: props.theme.PRIMARY_TEXT_COLOR,
             isTimerRunning: false,
             isTimerDisabled: false,
+            isInspecting: false,
             currentSolve: '-',
             mean: '-',
             ao5: '-',
@@ -115,7 +116,8 @@ class HomeScreen extends Component{
         var selectedScramble = this.state.selectedSession['scramble'];
         var index = this.state.scrambleTypes.findIndex(scrambleType => scrambleType === selectedScramble);
         var scrambleCode = this.state.scrambleCodes[index];
-        var scramble = scrambo.type(scrambleCode).get(1);
+        var scramble = scrambo.type(scrambleCode).length(20).get(1);
+        if(scrambleCode == '222'){scramble = scrambo.type(scrambleCode).length(9).get(1);}
         this.setState({scrambleText: scramble});
 
         if(scrambleCode == '333')
@@ -302,63 +304,61 @@ class HomeScreen extends Component{
     
     handleTimerPressIn = async () => {
         if (this.state.isTimerRunning)
-        {
-        // finish timer
-        clearTimeout(this.timerTimout);
-        this.setState({isTimerRunning: false, timerText: this.state.hiddentTimerText});
-
-        // save solve
-        var solveDate = moment().format('MMMM Do YYYY, h:mm:ss a');
-        var solveScramble = this.state.scrambleText;
-        var solveTime = this.state.hiddentTimerText;
-        
-        var solve = {time: solveTime, timeInSeconds:this.state.timeInSeconds, scramble: solveScramble, date: solveDate, mean: '-', meanInSeconds:0, ao5: '-', ao5InSeconds: 0, ao12: '-',ao12InSeconds: 0, ao100: '-',ao100InSeconds: 0, cubeType: this.state.selectedCube};
-       
-        var solves = await AsyncStorage.getItem("solves");
-        if (solves == null) {
-            solve['mean'] = solve['time'];
-            var mean = solve['time'];
-            if(mean > 60){mean = this.secToMin(mean)};
-            solve['meanInSeconds'] = mean;
-            var newSolves = {solves: [solve]};
-            await AsyncStorage.setItem("solves", JSON.stringify(newSolves));
-        }
-        else {
-            solves = JSON.parse(solves);
-            solves = solves['solves'];
-            solve = await this.calculateAverages(solve);
-            solves.push(solve);
-            var newSolves = {solves : solves};
-            await AsyncStorage.setItem("solves", JSON.stringify(newSolves));
-        }
-        // refresh context solves
-        this.context.getSolves();
-
-        // display new averages
-        this.context.displayAverages();
-        // set new scramble
-        this.getScramble();
-
-        this.setState({timerStyle: {}});
-        }
-        else
-        {
-            var isTimerDisabled = await AsyncStorage.getItem('isTimerDisabled');
-            if(isTimerDisabled == 'true')
             {
-                this.setState({isTimerDisabled: true})
-            }
-            else if(isTimerDisabled == 'false')
-            {
-                this.setState({isTimerDisabled: false})
-            }
+            // finish timer
+            clearTimeout(this.timerTimout);
+            this.setState({isTimerRunning: false, timerText: this.state.hiddentTimerText});
+
+            // save solve
+            var solveDate = moment().format('MMMM Do YYYY, h:mm:ss a');
+            var solveScramble = this.state.scrambleText;
+            var solveTime = this.state.hiddentTimerText;
             
-            this.setState({timerStyle: { color: 'red'}});
-            this.greenTimer = setTimeout(() => { this.setState({timerStyle: {color: 'lime'}}) }, 250);
-
-        }
-    
+            var solve = {time: solveTime, timeInSeconds:this.state.timeInSeconds, scramble: solveScramble, date: solveDate, mean: '-', meanInSeconds:0, ao5: '-', ao5InSeconds: 0, ao12: '-',ao12InSeconds: 0, ao100: '-',ao100InSeconds: 0, cubeType: this.state.selectedCube};
         
+            var solves = await AsyncStorage.getItem("solves");
+            if (solves == null) {
+                solve['mean'] = solve['time'];
+                var mean = solve['time'];
+                if(mean > 60){mean = this.secToMin(mean)};
+                solve['meanInSeconds'] = mean;
+                var newSolves = {solves: [solve]};
+                await AsyncStorage.setItem("solves", JSON.stringify(newSolves));
+            }
+            else {
+                solves = JSON.parse(solves);
+                solves = solves['solves'];
+                solve = await this.calculateAverages(solve);
+                solves.push(solve);
+                var newSolves = {solves : solves};
+                await AsyncStorage.setItem("solves", JSON.stringify(newSolves));
+            }
+            // refresh context solves
+            this.context.getSolves();
+
+            // display new averages
+            this.context.displayAverages();
+            // set new scramble
+            this.getScramble();
+
+            this.setState({timerStyle: {}});
+            }
+            else
+            {
+                var isTimerDisabled = await AsyncStorage.getItem('isTimerDisabled');
+                if(isTimerDisabled == 'true')
+                {
+                    this.setState({isTimerDisabled: true})
+                }
+                else if(isTimerDisabled == 'false')
+                {
+                    this.setState({isTimerDisabled: false})
+                }
+                
+                this.setState({timerStyle: { color: 'red'}});
+                this.greenTimer = setTimeout(() => { this.setState({timerStyle: {color: 'lime'}}) }, 250);
+
+            }
     }
     
     handleTimerPressOut = async () => {
@@ -366,12 +366,29 @@ class HomeScreen extends Component{
         this.setState({timerStyle:{}})
     
         if (this.state.timerStyle['color'] == 'lime'){
-        // start timer
-        this.setState({isTimerRunning: true})
-        
+            //check if inspection timer is running
+            if(this.state.isInspecting){
+                this.setState({isTimerRunning: true, isInspecting: false})
+                clearTimeout(this.timerTimout);
+                this.startTime = new Date();
+                this.handleStartTimer();
+            }
+            else{
+                // check inspection setting
+                if(this.context.inspection){
+                    this.setState({isInspecting: true})
 
-        this.startTime = new Date();
-        this.handleStartTimer();
+                    this.startTime = new Date();
+                    this.handleInspectionTimer();
+                }
+                else {
+                    // start timer
+                    this.setState({isTimerRunning: true})
+                    
+                    this.startTime = new Date();
+                    this.handleStartTimer();
+                }
+            }
         }
     }
     
@@ -398,6 +415,26 @@ class HomeScreen extends Component{
         }
     
         this.timerTimout = setTimeout(() => { this.handleStartTimer(); }, 10);
+    }
+
+    handleInspectionTimer = async () => {
+        var now = new Date();
+        var diff = now - this.startTime;
+        
+        var seconds = diff / 1000;
+        var seconds = seconds.toFixed(0);
+
+        var seconds = 15 - seconds
+        if(seconds > 0){
+            this.setState({timerText: seconds})
+            this.timerTimout = setTimeout(() => { this.handleInspectionTimer(); }, 1000);
+        }
+        else{
+            this.setState({isTimerRunning: true, isInspecting: false})
+            clearTimeout(this.timerTimout);
+            this.startTime = new Date();
+            this.handleStartTimer();
+        }
     }
 
     secToMin = (seconds) =>{
@@ -587,168 +624,179 @@ class HomeScreen extends Component{
             <MyContext.Consumer>
                 {context => (
                     <ThemeProvider theme={this.props.theme}>
-                    <Container>
-                        <BannerAd/>
-                        <Modal
-                            animationType="slide"
-                            transparent={true}
-                            visible={modalVisible}
-                            onRequestClose={() => {
-                                this.setModalVisible(!modalVisible);
-                            }}
-                            >
-                            <TouchableOpacity activeOpacity={1} onPress={() => this.setModalVisible(!modalVisible)} style={{flex: 1,justifyContent: 'center',alignItems: 'center'}}>
-                            <TouchableOpacity activeOpacity={1} style={{width: '60%', height: '40%'}}>
-                            <KeyboardAvoidingView
-                                style={styles.centeredView}
-                                behavior={Platform.OS === "ios" ? "padding" : "height"}
-                            >
-                                <ModalView>
-                                    <ModalTextInput
-                                        placeholder="session name"
-                                        placeholderTextColor="lightgray" 
-                                        onChangeText={ text => this.setState({modalCubeType: text})}
-                                    />
-                                    <ScrambleSelector
-                                    itemStyle={{height: 100}}
-                                        selectedValue={this.state.selectedScramble}
-                                        onValueChange={(itemValue, itemIndex) => this.setSelectedScramble(itemValue, itemIndex)}
-    
-                                    >
-                                        {scrambleCodes}
-                                    </ScrambleSelector>
-                                    <ModalButton
-                                        onPress={() => this.addCubeType()}
-                                    >
-                                        <TextStyle>Add</TextStyle>
-                                    </ModalButton>
-                                </ModalView>
-                            </KeyboardAvoidingView>
-                            </TouchableOpacity>
-                            </TouchableOpacity>
-                        </Modal>
-    
-    
-                        <View style={styles.cubeSelectionContainer}>
-                            <AddCubeTypeButton activeOpacity={1}onPress={() => this.deleteSessionAlert()}>
-                                <Text>x</Text>
-                            </AddCubeTypeButton>
-    
-                            <Selector
-                            itemStyle={{height: 44}}
-                                selectedValue={this.state.selectedCube}
-                                onValueChange={(itemValue, itemIndex) => this.setSelectedSession(itemValue, itemIndex)}
-    
-                            >
-                                {cubeTypes}
-                            </Selector>
-    
-                            <AddCubeTypeButton activeOpacity={1} onPress={() => this.setModalVisible(true)}>
-                                <Text>+</Text>
-                            </AddCubeTypeButton>
-                        </View>
-                        
-    
-                        <TouchableOpacity activeOpacity={1} style={styles.scramble} onPress={this.handleNewScramble}>
-                            <SrambleText>{this.state.scrambleText}</SrambleText>
-                        </TouchableOpacity>
-                        <TouchableOpacity activeOpacity={1} style={styles.timer} onPressIn={this.handleTimerPressIn} onPressOut={this.handleTimerPressOut}>
-                            <TimerText style={this.state.timerStyle}>{this.state.timerText}</TimerText>
-                        </TouchableOpacity>
-                        <StatusBar style="auto" />
-    
-                        <View style={styles.averages}>
-                            <View>
-                                <AveragesText>current: {context.currentSolve}</AveragesText>
-                                <AveragesText>mean: {context.mean}</AveragesText>
-                                <AveragesText>ao5: {context.ao5}</AveragesText>
-                                <AveragesText>ao12: {context.ao12}</AveragesText>
-                                <AveragesText>ao100: {context.ao100}</AveragesText>
-                            </View>
-    
-    
-                            <View style={styles.scrambleImage}>
-                                <View style={styles.faces}>
-                                {
-                                    this.state.uFace.map((item, index) =>{
-                                    return (
-                                        <Square color={this.colorJSON[item]}/>
-                                    )
-                                    })
-                                }
+                        {this.state.isTimerRunning == false && this.state.isInspecting == false? 
+                        <Container>
+                                <View>
+                                    {context.showAds == true? <BannerAd/> : null}
                                 </View>
-                                <View style={styles.middleFaces}>
+                                <Modal
+                                    animationType="slide"
+                                    transparent={true}
+                                    visible={modalVisible}
+                                    onRequestClose={() => {
+                                        this.setModalVisible(!modalVisible);
+                                    }}
+                                    >
+                                    <TouchableOpacity activeOpacity={1} onPress={() => this.setModalVisible(!modalVisible)} style={{flex: 1,justifyContent: 'center',alignItems: 'center'}}>
+                                    <TouchableOpacity activeOpacity={1} style={{width: '60%', height: '40%'}}>
+                                    <KeyboardAvoidingView
+                                        style={styles.centeredView}
+                                        behavior={Platform.OS === "ios" ? "padding" : "height"}
+                                    >
+                                        <ModalView>
+                                            <ModalTextInput
+                                                placeholder="session name"
+                                                placeholderTextColor="lightgray" 
+                                                onChangeText={ text => this.setState({modalCubeType: text})}
+                                            />
+                                            <ScrambleSelector
+                                            itemStyle={{height: 100}}
+                                                selectedValue={this.state.selectedScramble}
+                                                onValueChange={(itemValue, itemIndex) => this.setSelectedScramble(itemValue, itemIndex)}
+            
+                                            >
+                                                {scrambleCodes}
+                                            </ScrambleSelector>
+                                            <ModalButton
+                                                onPress={() => this.addCubeType()}
+                                            >
+                                                <TextStyle>Add</TextStyle>
+                                            </ModalButton>
+                                        </ModalView>
+                                    </KeyboardAvoidingView>
+                                    </TouchableOpacity>
+                                    </TouchableOpacity>
+                                </Modal>
+            
+            
+                                <View style={styles.cubeSelectionContainer}>
+                                    <AddCubeTypeButton activeOpacity={1}onPress={() => this.deleteSessionAlert()}>
+                                        <Text>x</Text>
+                                    </AddCubeTypeButton>
+            
+                                    <Selector
+                                    itemStyle={{height: 44}}
+                                        selectedValue={this.state.selectedCube}
+                                        onValueChange={(itemValue, itemIndex) => this.setSelectedSession(itemValue, itemIndex)}
+            
+                                    >
+                                        {cubeTypes}
+                                    </Selector>
+            
+                                    <AddCubeTypeButton activeOpacity={1} onPress={() => this.setModalVisible(true)}>
+                                        <Text>+</Text>
+                                    </AddCubeTypeButton>
+                                </View>
                                 
-                                    <View style={styles.faces}>
-                                    {
-                                        this.state.lFace.map((item, index) =>{
-                                        return (
-                                            <Square color={this.colorJSON[item]}/>
-                                        )
-                                        })
-                                    }
+            
+                                <TouchableOpacity activeOpacity={1} style={styles.scramble} onPress={this.handleNewScramble}>
+                                    <SrambleText>{this.state.scrambleText}</SrambleText>
+                                </TouchableOpacity>
+                                <TouchableOpacity activeOpacity={1} style={styles.timer} onPressIn={this.handleTimerPressIn} onPressOut={this.handleTimerPressOut}>
+                                    <TimerText style={this.state.timerStyle}>{this.state.timerText}</TimerText>
+                                </TouchableOpacity>
+                                <StatusBar style="auto" />
+            
+                                <View style={styles.averages}>
+                                    <View>
+                                        <AveragesText>current: {context.currentSolve}</AveragesText>
+                                        <AveragesText>mean: {context.mean}</AveragesText>
+                                        <AveragesText>ao5: {context.ao5}</AveragesText>
+                                        <AveragesText>ao12: {context.ao12}</AveragesText>
+                                        <AveragesText>ao100: {context.ao100}</AveragesText>
                                     </View>
-                                    <View style={styles.faces}>
-                                    {
-                                        this.state.fFace.map((item, index) =>{
-                                        return (
-                                            <Square color={this.colorJSON[item]}/>
-                                        )
-                                        })
-                                    }
+            
+            
+                                    <View style={styles.scrambleImage}>
+                                        <View style={styles.faces}>
+                                        {
+                                            this.state.uFace.map((item, index) =>{
+                                            return (
+                                                <Square color={this.colorJSON[item]}/>
+                                            )
+                                            })
+                                        }
+                                        </View>
+                                        <View style={styles.middleFaces}>
+                                        
+                                            <View style={styles.faces}>
+                                            {
+                                                this.state.lFace.map((item, index) =>{
+                                                return (
+                                                    <Square color={this.colorJSON[item]}/>
+                                                )
+                                                })
+                                            }
+                                            </View>
+                                            <View style={styles.faces}>
+                                            {
+                                                this.state.fFace.map((item, index) =>{
+                                                return (
+                                                    <Square color={this.colorJSON[item]}/>
+                                                )
+                                                })
+                                            }
+                                            </View>
+                                            <View style={styles.faces}>
+                                            {
+                                                this.state.rFace.map((item, index) =>{
+                                                return (
+                                                    <Square color={this.colorJSON[item]}/>
+                                                )
+                                                })
+                                            }
+                                            </View>
+                                            <View style={styles.faces}>
+                                            {
+                                                this.state.bFace.map((item, index) =>{
+                                                return (
+                                                    <Square color={this.colorJSON[item]}/>
+                                                )
+                                                })
+                                            }
+                                            </View>
+                                        </View>
+                                        <View style={styles.faces}>
+                                        {
+                                            this.state.dFace.map((item, index) =>{
+                                            return (
+                                                <Square color={this.colorJSON[item]}/>
+                                            )
+                                            })
+                                        }
+                                        </View>
                                     </View>
-                                    <View style={styles.faces}>
-                                    {
-                                        this.state.rFace.map((item, index) =>{
-                                        return (
-                                            <Square color={this.colorJSON[item]}/>
-                                        )
-                                        })
-                                    }
-                                    </View>
-                                    <View style={styles.faces}>
-                                    {
-                                        this.state.bFace.map((item, index) =>{
-                                        return (
-                                            <Square color={this.colorJSON[item]}/>
-                                        )
-                                        })
-                                    }
+            
+            
+                                    <View>
+                                        <AveragesText>best: {context.bestSolve}</AveragesText>
+                                        <AveragesText>mean: {context.bestMean}</AveragesText>
+                                        <AveragesText>ao5: {context.bestAo5}</AveragesText>
+                                        <AveragesText>ao12: {context.bestAo12}</AveragesText>
+                                        <AveragesText>ao100: {context.bestAo100}</AveragesText>
                                     </View>
                                 </View>
-                                <View style={styles.faces}>
-                                {
-                                    this.state.dFace.map((item, index) =>{
-                                    return (
-                                        <Square color={this.colorJSON[item]}/>
-                                    )
-                                    })
-                                }
-                                </View>
-                            </View>
-    
-    
-                            <View>
-                                <AveragesText>best: {context.bestSolve}</AveragesText>
-                                <AveragesText>mean: {context.bestMean}</AveragesText>
-                                <AveragesText>ao5: {context.bestAo5}</AveragesText>
-                                <AveragesText>ao12: {context.bestAo12}</AveragesText>
-                                <AveragesText>ao100: {context.bestAo100}</AveragesText>
-                            </View>
-                        </View>
-    
-                        <PageNavigator>
-                            <TouchableOpacity onPress={() => this.props.navigation.navigate('SettingsScreen')}>
-                                <Image style={styles.pagesButton} source={require('../assets/settings.png')}/>
-                            </TouchableOpacity>
-                            <TouchableOpacity>
-                                <Image style={styles.pagesButtonClicked} source={require('../assets/home.png')}/>
-                            </TouchableOpacity>
-                            <TouchableOpacity onPress={() => this.props.navigation.navigate('SolvesScreen')}>
-                            <Image style={styles.pagesButton} source={require('../assets/graph.png')}/>
-                            </TouchableOpacity>
-                        </PageNavigator>
-                    </Container>
+            
+                                <PageNavigator>
+                                    <TouchableOpacity onPress={() => this.props.navigation.navigate('SettingsScreen')}>
+                                        <Image style={styles.pagesButton} source={require('../assets/settings.png')}/>
+                                    </TouchableOpacity>
+                                    <TouchableOpacity>
+                                        <Image style={styles.pagesButtonClicked} source={require('../assets/home.png')}/>
+                                    </TouchableOpacity>
+                                    <TouchableOpacity onPress={() => this.props.navigation.navigate('SolvesScreen')}>
+                                    <Image style={styles.pagesButton} source={require('../assets/graph.png')}/>
+                                    </TouchableOpacity>
+                                </PageNavigator>
+                            </Container> 
+                            : 
+                            <Container>
+                                <TouchableOpacity activeOpacity={1} style={styles.timer} onPressIn={this.handleTimerPressIn} onPressOut={this.handleTimerPressOut}>
+                                    <TimerText style={this.state.timerStyle}>{this.state.timerText}</TimerText>
+                                </TouchableOpacity>
+                                <StatusBar style="auto" />
+                            </Container>}
+                            
                 </ThemeProvider>
                 )}
             
@@ -865,6 +913,7 @@ const TextStyle = styled.Text`
 `
 
 const ModalTextInput = styled.TextInput`
+    textAlign: center;
     paddingVertical: 15px;
     paddingHorizontal: 15px;
     backgroundColor: ${props => props.theme.PRIMARY_BACKGROUND_COLOR};

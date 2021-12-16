@@ -12,7 +12,10 @@ import { bindActionCreators } from 'redux'
 import { switchTheme } from '../redux/actions'
 import { darkTheme, lightTheme, defaultTheme, redTheme, avocadoTheme, cottonCandyTheme } from '../styles/theme'
 
+import { MyContext } from "../context";
+
 class SettingsScreen extends Component{
+    static contextType = MyContext;
     constructor(props){
         super(props);
 
@@ -28,8 +31,11 @@ class SettingsScreen extends Component{
     }
 
     _loadToggles = async () => {
-        const value = await AsyncStorage.getItem("isTimerDisabled");
-        if (value == "true") { this.setState({ isTimerDisabled: true }); }
+        const isTimerDisabled = await AsyncStorage.getItem("isTimerDisabled");
+        if (isTimerDisabled == "true") { this.setState({ isTimerDisabled: true }); }
+
+        const inspection = await AsyncStorage.getItem("inspection");
+        if (inspection == "true"){this.context.setInspection(true);}
     }
 
     getTheme = async () => {
@@ -113,26 +119,25 @@ class SettingsScreen extends Component{
         }
     }
 
+    toggleInspectionSwitch = () => {
+        if (this.context.inspection)
+        {
+            this.context.setInspection(false);
+            this.storeData("inspection", "false");
+        }
+        else
+        {
+            this.context.setInspection(true);
+            this.storeData("inspection", "true");
+        }
+    }
+
     storeData = async (key, value) => {
         try {
             await AsyncStorage.setItem(key, value);
         } 
         catch (error) {
             console.warn(error);
-        }
-    }
-    
-    checkToggles = async () =>{
-        try {
-            const value = await AsyncStorage.getItem("isTimerDisabled");
-            if (value == "true"){
-                this.setState ({
-                    isTimerDisabled: true,
-                })
-            }
-        } 
-        catch (error) {
-            console.warn(error)
         }
     }
 
@@ -161,54 +166,72 @@ class SettingsScreen extends Component{
         });
         
         return (
-            <ThemeProvider theme={this.props.theme}>
-                <Container>
-                <BannerAd/>
-                    <StatusBar style="auto" />
-                    <View style={styles.settings}>
-                        <SettingWrapper>
-                            <Text style={styles.settingText}>
-                                Disable Timer during Solve
-                            </Text>
-                            <Switch style={styles.switch} 
-                                trackColor={{ false: "black", true: "lime" }}
-                                thumbColor={this.state.isTimerDisabled ? "green" : "red"}
-                                ios_backgroundColor="#3e3e3e"
-                                onValueChange={this.toggleTimerDisableSwitch}
-                                value={this.state.isTimerDisabled}
-                            />
-                        </SettingWrapper>
-
-                        <SettingWrapper>
-                            <Text style={styles.settingText}>
-                                Change Theme
-                            </Text>
-                            <ThemeSelector
-                                itemStyle={{height: 50}}
-                                    selectedValue={this.state.currentTheme}
-                                    onValueChange={(itemValue, itemIndex) => this.switchTheme(itemValue, itemIndex)}
-
-                                >
-                                    {themes}
-                            </ThemeSelector>
-                        </SettingWrapper>
+            <MyContext.Consumer>
+                {context => (
+                    <ThemeProvider theme={this.props.theme}>
+                    <Container>
+                    <View>
+                        {context.showAds == true? <BannerAd/> : null}
                     </View>
+                        <StatusBar style="auto" />
+                        <View style={styles.settings}>
+                            <SettingWrapper>
+                                <Text style={styles.settingText}>
+                                    Disable Timer during Solve
+                                </Text>
+                                <Switch style={styles.switch} 
+                                    trackColor={{ false: "black", true: "lime" }}
+                                    thumbColor={this.state.isTimerDisabled ? "green" : "red"}
+                                    ios_backgroundColor="#3e3e3e"
+                                    onValueChange={this.toggleTimerDisableSwitch}
+                                    value={this.state.isTimerDisabled}
+                                />
+                            </SettingWrapper>
 
-
-                    <PageNavigator>
-                        <TouchableOpacity>
-                            <Image style={styles.pagesButtonClicked} source={require('../assets/settings.png')}/>
-                        </TouchableOpacity>
-                        <TouchableOpacity onPress={() => this.props.navigation.navigate('HomeScreen')}>
-                            <Image style={styles.pagesButton} source={require('../assets/home.png')}/>
-                        </TouchableOpacity>
-                        <TouchableOpacity onPress={() => this.props.navigation.navigate('SolvesScreen')}>
-                            <Image style={styles.pagesButton} source={require('../assets/graph.png')}/>
-                        </TouchableOpacity>
-                    </PageNavigator>
-                </Container>
-            </ThemeProvider>
-            
+                            <SettingWrapper>
+                                <Text style={styles.settingText}>
+                                    Inspection
+                                </Text>
+                                <Switch style={styles.switch} 
+                                    trackColor={{ false: "black", true: "lime" }}
+                                    thumbColor={context.inspection ? "green" : "red"}
+                                    ios_backgroundColor="#3e3e3e"
+                                    onValueChange={this.toggleInspectionSwitch}
+                                    value={context.inspection}
+                                />
+                            </SettingWrapper>
+    
+                            <SettingWrapper>
+                                <Text style={styles.settingText}>
+                                    Change Theme
+                                </Text>
+                                <ThemeSelector
+                                    itemStyle={{height: 50}}
+                                        selectedValue={this.state.currentTheme}
+                                        onValueChange={(itemValue, itemIndex) => this.switchTheme(itemValue, itemIndex)}
+    
+                                    >
+                                        {themes}
+                                </ThemeSelector>
+                            </SettingWrapper>
+                        </View>
+    
+    
+                        <PageNavigator>
+                            <TouchableOpacity>
+                                <Image style={styles.pagesButtonClicked} source={require('../assets/settings.png')}/>
+                            </TouchableOpacity>
+                            <TouchableOpacity onPress={() => this.props.navigation.navigate('HomeScreen')}>
+                                <Image style={styles.pagesButton} source={require('../assets/home.png')}/>
+                            </TouchableOpacity>
+                            <TouchableOpacity onPress={() => this.props.navigation.navigate('SolvesScreen')}>
+                                <Image style={styles.pagesButton} source={require('../assets/graph.png')}/>
+                            </TouchableOpacity>
+                        </PageNavigator>
+                    </Container>
+                </ThemeProvider>
+                )}
+            </MyContext.Consumer>
             )
     }
 }

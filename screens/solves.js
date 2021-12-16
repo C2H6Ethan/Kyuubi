@@ -5,7 +5,7 @@ import  AsyncStorage  from "@react-native-async-storage/async-storage";
 import { ScrollView, TouchableWithoutFeedback } from 'react-native-gesture-handler';
 import moment from 'moment';
 import {Picker} from '@react-native-picker/picker';
-import BannerAd from "../Ads/BannerAdSettings";
+import BannerAd from "../Ads/BannerAdSolves";
 import { useFocusEffect } from '@react-navigation/native';
 
 import styled, { ThemeProvider } from 'styled-components/native'
@@ -146,7 +146,9 @@ class SolvesScreen extends Component{
                 {context => (
                     <ThemeProvider theme={this.props.theme}>
                     <Container>
-                    <BannerAd/>
+                    <View>
+                        {context.showAds == true? <BannerAd/> : null}
+                    </View>
                         <Modal
                         animationType="slide"
                         transparent={true}
