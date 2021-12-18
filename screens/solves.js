@@ -33,6 +33,9 @@ class SolvesScreen extends Component{
             primaryColor: '#303030',
             accentColor: '#007fff',
 
+            timerPlus2Style: {},
+            timerDNFStyle: {},
+
             solvesCount: 0,
         };
     }
@@ -46,7 +49,12 @@ class SolvesScreen extends Component{
             // set solve data
            var solves = this.context.solves;
            var solve = solves[index];
-           this.setState({modalTime: solve['time'], modalDate: solve['date'], modalScramble: solve['scramble'],  modalCubeType: solve['cubeType'],currentSolveIndex: index,});
+           var solveTime = solve['time']
+           if(solve['isPlus2'] == true){solveTime = (Number(solveTime) + 2).toFixed(2);}
+           else{
+            if(solve['isDNF'] == true){solveTime = 'DNF'}
+           }
+           this.setState({modalTime: solveTime, modalDate: solve['date'], modalScramble: solve['scramble'],  modalCubeType: solve['cubeType'],currentSolveIndex: index,});
     
         }
     }
@@ -99,7 +107,9 @@ class SolvesScreen extends Component{
             return this.context.solves.map((data, index) => {
                 return (
                     <Times key={index} onPress={() => this.setModalVisible(true, index)}>
-                      <TimeText>{data.time}</TimeText> 
+                        {data.isDNF? <TimeText>DNF</TimeText>:null}
+                        {data.isPlus2? <TimeText>{(Number(data.time) + 2).toFixed(2)}</TimeText> : null}
+                        {data.isPlus2 != true && data.isDNF != true? <TimeText>{data.time}</TimeText>: null}
                     </Times>
                 )
               })
@@ -137,6 +147,14 @@ class SolvesScreen extends Component{
         }
     }
 
+    addPlus2 = async () => {
+        
+    }
+
+    addDNF = async () => {
+        
+    }
+
 
     render(){
         const { navigate } = this.props.navigation;
@@ -147,7 +165,7 @@ class SolvesScreen extends Component{
                     <ThemeProvider theme={this.props.theme}>
                     <Container>
                     <View>
-                        {context.showAds == true? <BannerAd/> : null}
+                        {context.showAds == true && context.isPro == false? <BannerAd/> : null}
                     </View>
                         <Modal
                         animationType="slide"
@@ -165,11 +183,11 @@ class SolvesScreen extends Component{
                             <ModalText>{this.state.modalCubeType}</ModalText>
                             <ModalText>{this.state.modalScramble}</ModalText>
                             <ModalText>{this.state.modalDate}</ModalText>
-                                <ButtonClose
-                                onPress={() => this.deleteSolve(this.state.currentSolveIndex)}
-                            >
-                                <TextStyle>Delete</TextStyle>
-                            </ButtonClose>
+                            <View style={styles.timerButtons}>
+                                <TimerButton activeOpacity={1} onPressIn={() => this.deleteSolve(this.state.currentSolveIndex)}><TimerButtonText>X</TimerButtonText></TimerButton>
+                                <TimerButton activeOpacity={1} onPressIn={this.addPlus2} style={this.state.timerPlus2Style}><TimerButtonText>+2</TimerButtonText></TimerButton>
+                                <TimerButton activeOpacity={1} onPressIn={this.addDNF} style={this.state.timerDNFStyle}><TimerButtonText>DNF</TimerButtonText></TimerButton>
+                            </View>
                             </ModalView>
                         </View>
                         </TouchableOpacity>
@@ -252,6 +270,11 @@ const styles = StyleSheet.create({
         borderRadius: 10,
         marginBottom: 8,
         width: '80%',
+    },
+    timerButtons:{
+        justifyContent: 'space-evenly',
+        alignItems: 'center',
+        flexDirection: 'row',
     },
     
 });
@@ -336,6 +359,21 @@ const Filter = styled.Picker`
     borderRadius: 10px;
     marginBottom: 8px;
     width: 80%;
+`
+
+const TimerButton = styled.TouchableOpacity`
+    align-items: center;
+    justify-content: center;
+    background-color: ${props => props.theme.SECONDARY_BACKGROUND_COLOR};
+    width: 50px;
+    padding: 10px;
+    borderRadius: 30px;
+    margin: 5px;
+`
+
+const TimerButtonText = styled.Text`
+    color: ${props => props.theme.SECONDARY_TEXT_COLOR};
+    fontSize: 10px;
 `
 
 const mapStateToProps = state => ({

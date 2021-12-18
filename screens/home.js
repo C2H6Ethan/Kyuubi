@@ -32,20 +32,23 @@ class HomeScreen extends Component{
             timerText: '0.00',
             timeInSeconds: 0,
             timerStyle: {},
+            timerPlus2Style: {},
+            timerDNFStyle: {},
             hiddentTimerText: '0.00',
             timerColor: props.theme.PRIMARY_TEXT_COLOR,
             originalTimerColor: props.theme.PRIMARY_TEXT_COLOR,
             isTimerRunning: false,
             isTimerDisabled: false,
             isInspecting: false,
+            isThereLastSolve: false,
             currentSolve: '-',
-            mean: '-',
+            mo3: '-',
             ao5: '-',
             ao12: '-',
             ao100: '-',
 
             bestSolve: '-',
-            bestMean: '-',
+            bestMo3: '-',
             bestAo5: '-',
             bestAo12: '-',
             bestAo100: '-',
@@ -195,63 +198,55 @@ class HomeScreen extends Component{
 
         solves.reverse();
 
-        if(solves.length > 0)
-        {
-            //calculate mean
-            var sum = 0;
-            solves.forEach(element => {
-                sum = sum + parseFloat(element['timeInSeconds']);
-            });
-            sum = sum + parseFloat(solve['timeInSeconds']);
-            var mean = sum / (solves.length + 1);
-            mean = Number(mean).toFixed(2);
-            solve['meanInSeconds'] = mean;
-            if(mean > 60){mean = this.secToMin(mean)}
-            solve['mean'] = mean;
-        }
-        else {
-            var mean = Number(solve['timeInSeconds']).toFixed(2);
-            solve['meanInSeconds'] = mean;
-            if(mean > 60){mean = this.secToMin(mean)}
-            solve['mean'] = mean;
-        }
+        if(solve['isPlus2'] || solve['isDNF'] || solve['alreadyAdded']){solves.shift()}
 
-        if (solves.length >= 4)
+        if(solves.length >= 2)
         {
-            //calculate ao5
+            //calculate mo3
             var sum = 0;
             var values = [];
-            for (var i = 0; i < 4; i++){
+            var isDNF = false;
+            for (var i = 0; i < 2; i++){
                 var currentSolve = solves[i];
-                values.push(parseFloat(currentSolve['timeInSeconds']));
+                sum = sum + parseFloat(currentSolve['timeInSeconds']);
+                if(currentSolve['isPlus2'] == true){sum = sum + 2}
+                else{if(currentSolve['isDNF']){isDNF = true}}
             }
-            values.push(parseFloat(solve['timeInSeconds']));
-            
+            sum = sum + parseFloat(solve['timeInSeconds']);
+            if(solve['isPlus2'] == true){sum = sum + 2}
+            else{if(solve['isDNF']){isDNF = true}}
+            var mo3 = sum / 3;
+            mo3 = Number(mo3).toFixed(2);
+            solve['mo3InSeconds'] = mo3;
+            if(mo3 > 60){mo3 = this.secToMin(mo3)};
 
-            var max = Math.max(...values);
-            var min = Math.min(...values);
+            if(isDNF){
+                solve['mo3'] = 'DNF'
+            }
+            else{
+                solve['mo3'] = mo3;
+            }
 
-            values.forEach(element =>{
-                sum = sum + element;
-            });
-            sum = sum - max - min;
-
-            var ao5 = sum / 3;
-            ao5 = ao5.toFixed(2);
-            solve['ao5InSeconds'] = ao5;
-            if(ao5>60){ao5 = this.secToMin(ao5)}
-            solve['ao5'] = ao5;
-
-            if(solves.length >= 11)
+            if (solves.length >= 4)
             {
-                //calculate ao12
+                //calculate ao5
                 var sum = 0;
                 var values = [];
-                for (var i = 0; i < 11; i++){
+                var isDNF = false;
+                var DNFCounter = 0;
+                for (var i = 0; i < 4; i++){
                     var currentSolve = solves[i];
-                    values.push(parseFloat(currentSolve['timeInSeconds']));
+                    if(currentSolve['isPlus2'] == true){values.push(2)}
+                    else{
+                        if(currentSolve['isDNF']){
+                            DNFCounter = DNFCounter + 1; if(DNFCounter >= 2){isDNF = true}
+                        }
+                        else{
+                            values.push(parseFloat(currentSolve['timeInSeconds']));
+                        }}
                 }
-                values.push(parseFloat(solve['timeInSeconds']));
+                values.push(solve['isPlus2']? parseFloat(solve['timeInSeconds']) + 2 : parseFloat(solve['timeInSeconds']));
+                if(solve['isDNF']){DNFCounter = DNFCounter + 1; if(DNFCounter >= 2){isDNF = true}}
 
                 var max = Math.max(...values);
                 var min = Math.min(...values);
@@ -259,24 +254,35 @@ class HomeScreen extends Component{
                 values.forEach(element =>{
                     sum = sum + element;
                 });
-                sum = sum - max - min;
+                if(DNFCounter == 1){sum = sum - min;}
+                else{sum = sum - max - min;}
+                
+                var ao5 = sum / 3;
+                ao5 = ao5.toFixed(2);
+                solve['ao5InSeconds'] = ao5;
+                if(ao5>60){ao5 = this.secToMin(ao5)}
 
-                var ao12 = sum / 10;
-                ao12 = ao12.toFixed(2);
-                solve['ao12InSeconds'] = ao12;
-                if(ao12>60){ao12 = this.secToMin(ao12)}
-                solve['ao12'] = ao12;
+                if(isDNF){
+                    solve['ao5'] = 'DNF'
+                }
+                else{
+                    solve['ao5'] = ao5;
+                }
 
-                if(solves.length >= 99)
+                if(solves.length >= 11)
                 {
-                    //calculate ao100
+                    //calculate ao12
                     var sum = 0;
                     var values = [];
-                    for (var i = 0; i < 99; i++){
+                    var isDNF = false;
+                    var DNFCounter = 0;
+                    for (var i = 0; i < 11; i++){
                         var currentSolve = solves[i];
-                        values.push(parseFloat(currentSolve['timeInSeconds']));
+                        if(currentSolve['isPlus2'] == true){values.push(2)}
+                        else{if(currentSolve['isDNF']){DNFCounter = DNFCounter + 1; if(DNFCounter >= 2){isDNF = true}}else{values.push(parseFloat(currentSolve['timeInSeconds']));}}
                     }
-                    values.push(parseFloat(solve['timeInSeconds']));
+                    values.push(solve['isPlus2']? parseFloat(solve['timeInSeconds']) + 2 : parseFloat(solve['timeInSeconds']));
+                    if(solve['isDNF']){DNFCounter = DNFCounter + 1; if(DNFCounter >= 2){isDNF = true}}
 
                     var max = Math.max(...values);
                     var min = Math.min(...values);
@@ -284,17 +290,64 @@ class HomeScreen extends Component{
                     values.forEach(element =>{
                         sum = sum + element;
                     });
-                    sum = sum - max - min;
+                    if(DNFCounter == 1){sum = sum - min;}
+                    else{sum = sum - max - min;}
 
-                    var ao100 = sum / 98;
-                    ao100 = ao100.toFixed(2);
-                    solve['ao100InSeconds'] = ao100;
-                    if(ao100>60){ao100 = this.secToMin(ao100)}
-                    solve['ao100'] = ao100;
+                    var ao12 = sum / 10;
+                    ao12 = ao12.toFixed(2);
+                    solve['ao12InSeconds'] = ao12;
+                    if(ao12>60){ao12 = this.secToMin(ao12)}
+                    
+                    if(isDNF){
+                        solve['ao12'] = 'DNF'
+                    }
+                    else{
+                        solve['ao12'] = ao12;
+                    }
+
+                    if(solves.length >= 99)
+                    {
+                        //calculate ao100
+                        var sum = 0;
+                        var values = [];
+                        var isDNF = false;
+                        var DNFCounter = 0;
+                        for (var i = 0; i < 99; i++){
+                            var currentSolve = solves[i];
+                            if(currentSolve['isPlus2'] == true){values.push(2)}
+                            else{if(currentSolve['isDNF']){DNFCounter = DNFCounter + 1; if(DNFCounter >= 6){isDNF = true}}else{values.push(parseFloat(currentSolve['timeInSeconds']));}}
+                        }
+                        values.push(solve['isPlus2']? parseFloat(solve['timeInSeconds']) + 2 : parseFloat(solve['timeInSeconds']));
+                        if(solve['isDNF']){DNFCounter = DNFCounter + 1; if(DNFCounter >= 6){isDNF = true}}
+
+                        values.sort(function(a, b) {
+                            return a - b;
+                        });
+                        values.splice(0,5);
+                        values.reverse();
+                        values.splice(0,(5 - DNFCounter));
+
+                        values.forEach(element =>{
+                            sum = sum + element;
+                        });
+
+                        var ao100 = sum / 90;
+                        ao100 = ao100.toFixed(2);
+                        solve['ao100InSeconds'] = ao100;
+                        if(ao100>60){ao100 = this.secToMin(ao100)}
+                        
+                        if(isDNF){
+                            solve['ao100'] = 'DNF'
+                        }
+                        else{
+                            solve['ao100'] = ao100;
+                        }
+                    }
                 }
             }
         }
 
+    
         return solve;
     }
     
@@ -307,21 +360,19 @@ class HomeScreen extends Component{
             {
             // finish timer
             clearTimeout(this.timerTimout);
-            this.setState({isTimerRunning: false, timerText: this.state.hiddentTimerText});
+            this.setState({isTimerRunning: false, timerText: this.state.hiddentTimerText, isThereLastSolve: true});
+
 
             // save solve
+            this.setState({timerStyle: {},  timerPlus2Style: {}, timerDNFStyle: {}});
             var solveDate = moment().format('MMMM Do YYYY, h:mm:ss a');
             var solveScramble = this.state.scrambleText;
             var solveTime = this.state.hiddentTimerText;
             
-            var solve = {time: solveTime, timeInSeconds:this.state.timeInSeconds, scramble: solveScramble, date: solveDate, mean: '-', meanInSeconds:0, ao5: '-', ao5InSeconds: 0, ao12: '-',ao12InSeconds: 0, ao100: '-',ao100InSeconds: 0, cubeType: this.state.selectedCube};
+            var solve = {time: solveTime, timeInSeconds:this.state.timeInSeconds, scramble: solveScramble, date: solveDate, mo3: '-', mo3InSeconds:0, ao5: '-', ao5InSeconds: 0, ao12: '-',ao12InSeconds: 0, ao100: '-',ao100InSeconds: 0, cubeType: this.state.selectedCube};
         
             var solves = await AsyncStorage.getItem("solves");
             if (solves == null) {
-                solve['mean'] = solve['time'];
-                var mean = solve['time'];
-                if(mean > 60){mean = this.secToMin(mean)};
-                solve['meanInSeconds'] = mean;
                 var newSolves = {solves: [solve]};
                 await AsyncStorage.setItem("solves", JSON.stringify(newSolves));
             }
@@ -341,7 +392,7 @@ class HomeScreen extends Component{
             // set new scramble
             this.getScramble();
 
-            this.setState({timerStyle: {}});
+            
             }
             else
             {
@@ -465,7 +516,7 @@ class HomeScreen extends Component{
         });
         var selectedSession = {name: itemValue, scramble: scrambleType};
 
-        this.setState({selectedCube: itemValue, selectedSessionIndex: itemIndex, selectedSession: selectedSession})
+        this.setState({selectedCube: itemValue, selectedSessionIndex: itemIndex, selectedSession: selectedSession, isThereLastSolve: false, timerText: '0.00'})
 
         this.context.displayAverages();
         this.getScramble();
@@ -561,6 +612,7 @@ class HomeScreen extends Component{
             await AsyncStorage.setItem('solves', JSON.stringify(newSolves));
         }
 
+        this.setState({isThereLastSolve: false, timerText: '0.00'})
         this.context.getSolves();
         this.context.displayAverages();
     }
@@ -570,7 +622,7 @@ class HomeScreen extends Component{
         if (sessions.length > 1) {
             Alert.alert(
                 "Session Deletion",
-                "Are you sure you want to delete your session",
+                "Are you sure you want to delete your session?",
                 [
                     {
                     text: "No",
@@ -608,6 +660,113 @@ class HomeScreen extends Component{
         );
     }
 
+    deleteSolveAlert = () => {
+        Alert.alert(
+            "Solve Deletion",
+            "Are you sure you want to delete your solve?",
+            [
+                {
+                text: "No",
+                style: "cancel"
+                },
+                { text: "Yes", onPress: () => this.deleteLastSolve() }
+            ]
+        );
+    }
+    
+    deleteLastSolve = async () => {
+        // delete solve
+        var solves = await AsyncStorage.getItem('solves');
+        solves = JSON.parse(solves);
+        solves = solves['solves'];
+        solves.reverse();
+        solves.shift();
+        solves.reverse();
+        var newSolves = {solves: solves};
+        await AsyncStorage.setItem('solves', JSON.stringify(newSolves));
+
+        this.context.getSolves();
+        this.context.displayAverages();
+
+        this.setState({timerText: '0.00', isThereLastSolve: false})
+    }
+
+    addPlus2 = async () => {
+        var solves = await AsyncStorage.getItem('solves');
+        solves = JSON.parse(solves);
+        solves = solves['solves'];
+        solves.reverse();
+        if(solves[0]['isPlus2'] == true){
+            //remove 2
+            solves[0]['isPlus2'] = false;
+            solves[0]['alreadyAdded'] = true;
+            solves[0] = await this.calculateAverages(solves[0]);
+            solves.reverse();
+            var newSolves = {solves: solves};
+            await AsyncStorage.setItem('solves', JSON.stringify(newSolves));
+
+            this.context.getSolves();
+            this.context.displayAverages();
+
+            var newTimerText = ((Number(this.state.timerText) - 2).toFixed(2)).toString();
+            this.setState({timerText: newTimerText, timerPlus2Style: {}})
+        }
+        else {
+            //add 2 
+            var solve = solves[0];
+            solves[0]['isPlus2'] = true;
+            solves[0]['isDNF'] = false;
+            solves[0] = await this.calculateAverages(solves[0]);
+            solves.reverse();
+            var newSolves = {solves: solves};
+            await AsyncStorage.setItem('solves', JSON.stringify(newSolves));
+
+            this.context.getSolves();
+            this.context.displayAverages();
+
+            var newTimerText = ((Number(solve['time']) + 2).toFixed(2)).toString();
+            this.setState({timerText: newTimerText, timerPlus2Style: {backgroundColor: 'lime'}, timerDNFStyle: {}})
+        }
+    }
+
+    addDNF = async () => {
+        var solves = await AsyncStorage.getItem('solves');
+        solves = JSON.parse(solves);
+        solves = solves['solves'];
+        solves.reverse();
+        if(solves[0]['isDNF'] == true){
+            //remove DNF
+            var solve = solves[0];
+            solves[0]['isDNF'] = false;
+            solves[0]['alreadyAdded'] = true;
+            solves[0] = await this.calculateAverages(solves[0]);
+            solves.reverse();
+            var newSolves = {solves: solves};
+            await AsyncStorage.setItem('solves', JSON.stringify(newSolves));
+
+            this.context.getSolves();
+            this.context.displayAverages();
+
+            var newTimerText = solve['time'];
+            this.setState({timerText: newTimerText, timerDNFStyle: {}})
+        }
+        else {
+            //add DNF
+            solves[0]['isDNF'] = true;
+            solves[0]['isPlus2'] = false;
+            solves[0] = await this.calculateAverages(solves[0]);
+            solves.reverse();
+            var newSolves = {solves: solves};
+            await AsyncStorage.setItem('solves', JSON.stringify(newSolves));
+
+            this.context.getSolves();
+            this.context.displayAverages();
+
+            var newTimerText = 'DNF';
+            this.setState({timerText: newTimerText, timerDNFStyle: {backgroundColor: 'lime'}, timerPlus2Style: {}})
+        }
+    }
+
     render(){
         const { navigate } = this.props.navigation;
         const { modalVisible } = this.state;
@@ -627,7 +786,7 @@ class HomeScreen extends Component{
                         {this.state.isTimerRunning == false && this.state.isInspecting == false? 
                         <Container>
                                 <View>
-                                    {context.showAds == true? <BannerAd/> : null}
+                                    {context.showAds == true && context.isPro == false? <BannerAd/> : null}
                                 </View>
                                 <Modal
                                     animationType="slide"
@@ -694,13 +853,21 @@ class HomeScreen extends Component{
                                 </TouchableOpacity>
                                 <TouchableOpacity activeOpacity={1} style={styles.timer} onPressIn={this.handleTimerPressIn} onPressOut={this.handleTimerPressOut}>
                                     <TimerText style={this.state.timerStyle}>{this.state.timerText}</TimerText>
+                                    {this.state.isThereLastSolve?
+                                        <View style={styles.timerButtons}>
+                                            <TimerButton activeOpacity={1} onPressIn={this.deleteSolveAlert}><TimerButtonText>X</TimerButtonText></TimerButton>
+                                            <TimerButton activeOpacity={1} onPressIn={this.addPlus2} style={this.state.timerPlus2Style}><TimerButtonText>+2</TimerButtonText></TimerButton>
+                                            <TimerButton activeOpacity={1} onPressIn={this.addDNF} style={this.state.timerDNFStyle}><TimerButtonText>DNF</TimerButtonText></TimerButton>
+                                        </View>
+                                        : null
+                                    }
                                 </TouchableOpacity>
                                 <StatusBar style="auto" />
             
                                 <View style={styles.averages}>
                                     <View>
                                         <AveragesText>current: {context.currentSolve}</AveragesText>
-                                        <AveragesText>mean: {context.mean}</AveragesText>
+                                        <AveragesText>mo3: {context.mo3}</AveragesText>
                                         <AveragesText>ao5: {context.ao5}</AveragesText>
                                         <AveragesText>ao12: {context.ao12}</AveragesText>
                                         <AveragesText>ao100: {context.ao100}</AveragesText>
@@ -770,7 +937,7 @@ class HomeScreen extends Component{
             
                                     <View>
                                         <AveragesText>best: {context.bestSolve}</AveragesText>
-                                        <AveragesText>mean: {context.bestMean}</AveragesText>
+                                        <AveragesText>mo3: {context.bestMo3}</AveragesText>
                                         <AveragesText>ao5: {context.bestAo5}</AveragesText>
                                         <AveragesText>ao12: {context.bestAo12}</AveragesText>
                                         <AveragesText>ao100: {context.bestAo100}</AveragesText>
@@ -828,6 +995,12 @@ const styles = StyleSheet.create({
         justifyContent: 'center',
         alignItems: 'center',
         width: '100%',
+    },
+    timerButtons:{
+        bottom: '35%',
+        justifyContent: 'space-evenly',
+        alignItems: 'center',
+        flexDirection: 'row',
     },
     averages: {
         justifyContent: 'space-evenly',
@@ -966,4 +1139,18 @@ const TimerText = styled.Text`
     color: ${props => props.theme.PRIMARY_TEXT_COLOR};
     fontSize: 75px;
     bottom: 25%;
+`
+const TimerButton = styled.TouchableOpacity`
+    align-items: center;
+    justify-content: center;
+    background-color: ${props => props.theme.SECONDARY_BACKGROUND_COLOR};
+    width: 50px;
+    padding: 10px;
+    borderRadius: 30px;
+    margin: 5px;
+`
+
+const TimerButtonText = styled.Text`
+    color: ${props => props.theme.SECONDARY_TEXT_COLOR};
+    fontSize: 10px;
 `

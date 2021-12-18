@@ -171,7 +171,7 @@ class SettingsScreen extends Component{
                     <ThemeProvider theme={this.props.theme}>
                     <Container>
                     <View>
-                        {context.showAds == true? <BannerAd/> : null}
+                        {context.showAds == true && context.isPro == false? <BannerAd/> : null}
                     </View>
                         <StatusBar style="auto" />
                         <View style={styles.settings}>
@@ -237,6 +237,7 @@ class SettingsScreen extends Component{
 }
 
 const styles = StyleSheet.create({
+    
     pagesButton: {
         width: 25,
         height: 25,
