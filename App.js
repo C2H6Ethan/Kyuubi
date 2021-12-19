@@ -91,6 +91,18 @@ export default class App extends Component {
     // });
   }
 
+  addDummySolves = async() => {
+    //for testing only!!!
+    var solves = [];
+    for (let index = 0; index < 500; index++) {
+      var random = (Math.random() * (20 - 0)).toFixed(2)
+      var solve = {time: random, timeInSeconds:random, scramble: 'dummyScramble', date: 'dummyDate', mo3: random, mo3InSeconds:random, ao5: random, ao5InSeconds: random, ao12: random,ao12InSeconds: random, ao100: random,ao100InSeconds: random, cubeType: '3x3'};
+      solves.push(solve);
+    }
+    var solvesToSave = {solves: solves};
+    await AsyncStorage.setItem("solves", JSON.stringify(solvesToSave));
+  }
+
   getSolves = async() => {
     var solves = await AsyncStorage.getItem('solves');
     if (solves != null){
@@ -216,6 +228,8 @@ export default class App extends Component {
         var minTime = Math.min(...times).toFixed(2);
         if(minTime>60){minTime = this.secToMin(minTime)}
 
+        if(times.length == 0){minTime = 'DNF'}
+
         if (solves.length >= 3)
         {
           if(mo3s.length == 0){
@@ -266,6 +280,173 @@ export default class App extends Component {
     }
   }
 
+  calculateAverages = async (solve) => {                       
+    var solves = await AsyncStorage.getItem("solves");
+    solves = JSON.parse(solves);
+    solves = solves['solves'];
+
+    //filter solves with cube type
+    var filteredArray = []
+    solves.forEach(solve => {                                       
+        if (solve['cubeType'] == this.state.selectedCube){filteredArray.push(solve)}
+    });
+    solves = filteredArray;
+
+    solves.reverse();
+
+    if(solve['isPlus2'] || solve['isDNF'] || solve['alreadyAdded']){solves.shift()}
+
+    if(solves.length >= 2)
+    {
+        //calculate mo3
+        var sum = 0;
+        var values = [];
+        var isDNF = false;
+        for (var i = 0; i < 2; i++){
+            var currentSolve = solves[i];
+            sum = sum + parseFloat(currentSolve['timeInSeconds']);
+            if(currentSolve['isPlus2'] == true){sum = sum + 2}
+            else{if(currentSolve['isDNF']){isDNF = true}}
+        }
+        sum = sum + parseFloat(solve['timeInSeconds']);
+        if(solve['isPlus2'] == true){sum = sum + 2}
+        else{if(solve['isDNF']){isDNF = true}}
+        var mo3 = sum / 3;
+        mo3 = Number(mo3).toFixed(2);
+        solve['mo3InSeconds'] = mo3;
+        if(mo3 > 60){mo3 = this.secToMin(mo3)};
+
+        if(isDNF){
+            solve['mo3'] = 'DNF'
+        }
+        else{
+            solve['mo3'] = mo3;
+        }
+
+        if (solves.length >= 4)
+        {
+            //calculate ao5
+            var sum = 0;
+            var values = [];
+            var isDNF = false;
+            var DNFCounter = 0;
+            for (var i = 0; i < 4; i++){
+                var currentSolve = solves[i];
+                if(currentSolve['isPlus2'] == true){values.push(2)}
+                else{
+                    if(currentSolve['isDNF']){
+                        DNFCounter = DNFCounter + 1; if(DNFCounter >= 2){isDNF = true}
+                    }
+                    else{
+                        values.push(parseFloat(currentSolve['timeInSeconds']));
+                    }}
+            }
+            values.push(solve['isPlus2']? parseFloat(solve['timeInSeconds']) + 2 : parseFloat(solve['timeInSeconds']));
+            if(solve['isDNF']){DNFCounter = DNFCounter + 1; if(DNFCounter >= 2){isDNF = true}}
+
+            var max = Math.max(...values);
+            var min = Math.min(...values);
+
+            values.forEach(element =>{
+                sum = sum + element;
+            });
+            if(DNFCounter == 1){sum = sum - min;}
+            else{sum = sum - max - min;}
+            
+            var ao5 = sum / 3;
+            ao5 = ao5.toFixed(2);
+            solve['ao5InSeconds'] = ao5;
+            if(ao5>60){ao5 = this.secToMin(ao5)}
+
+            if(isDNF){
+                solve['ao5'] = 'DNF'
+            }
+            else{
+                solve['ao5'] = ao5;
+            }
+
+            if(solves.length >= 11)
+            {
+                //calculate ao12
+                var sum = 0;
+                var values = [];
+                var isDNF = false;
+                var DNFCounter = 0;
+                for (var i = 0; i < 11; i++){
+                    var currentSolve = solves[i];
+                    if(currentSolve['isPlus2'] == true){values.push(2)}
+                    else{if(currentSolve['isDNF']){DNFCounter = DNFCounter + 1; if(DNFCounter >= 2){isDNF = true}}else{values.push(parseFloat(currentSolve['timeInSeconds']));}}
+                }
+                values.push(solve['isPlus2']? parseFloat(solve['timeInSeconds']) + 2 : parseFloat(solve['timeInSeconds']));
+                if(solve['isDNF']){DNFCounter = DNFCounter + 1; if(DNFCounter >= 2){isDNF = true}}
+
+                var max = Math.max(...values);
+                var min = Math.min(...values);
+
+                values.forEach(element =>{
+                    sum = sum + element;
+                });
+                if(DNFCounter == 1){sum = sum - min;}
+                else{sum = sum - max - min;}
+
+                var ao12 = sum / 10;
+                ao12 = ao12.toFixed(2);
+                solve['ao12InSeconds'] = ao12;
+                if(ao12>60){ao12 = this.secToMin(ao12)}
+                
+                if(isDNF){
+                    solve['ao12'] = 'DNF'
+                }
+                else{
+                    solve['ao12'] = ao12;
+                }
+
+                if(solves.length >= 99)
+                {
+                    //calculate ao100
+                    var sum = 0;
+                    var values = [];
+                    var isDNF = false;
+                    var DNFCounter = 0;
+                    for (var i = 0; i < 99; i++){
+                        var currentSolve = solves[i];
+                        if(currentSolve['isPlus2'] == true){values.push(2)}
+                        else{if(currentSolve['isDNF']){DNFCounter = DNFCounter + 1; if(DNFCounter >= 6){isDNF = true}}else{values.push(parseFloat(currentSolve['timeInSeconds']));}}
+                    }
+                    values.push(solve['isPlus2']? parseFloat(solve['timeInSeconds']) + 2 : parseFloat(solve['timeInSeconds']));
+                    if(solve['isDNF']){DNFCounter = DNFCounter + 1; if(DNFCounter >= 6){isDNF = true}}
+
+                    values.sort(function(a, b) {
+                        return a - b;
+                    });
+                    values.splice(0,5);
+                    values.reverse();
+                    values.splice(0,(5 - DNFCounter));
+
+                    values.forEach(element =>{
+                        sum = sum + element;
+                    });
+
+                    var ao100 = sum / 90;
+                    ao100 = ao100.toFixed(2);
+                    solve['ao100InSeconds'] = ao100;
+                    if(ao100>60){ao100 = this.secToMin(ao100)}
+                    
+                    if(isDNF){
+                        solve['ao100'] = 'DNF'
+                    }
+                    else{
+                        solve['ao100'] = ao100;
+                    }
+                }
+            }
+        }
+    }
+
+
+    return solve;
+}
+
   proPopup = () => {
     Alert.alert(
       "Upgrade to Kyuubi Pro",
@@ -284,7 +465,7 @@ export default class App extends Component {
   
   render(){
     return(
-      <MyContext.Provider value={{...this.state, setSolves: this.setSolves, getSolves: this.getSolves, setSolvesCount: this.setSolvesCount, displayAverages: this.displayAverages, setSelectedCube: this.setSelectedCube, setInspection: this.setInspection}}>
+      <MyContext.Provider value={{...this.state, setSolves: this.setSolves, getSolves: this.getSolves, setSolvesCount: this.setSolvesCount, displayAverages: this.displayAverages, calculateAverages: this.calculateAverages, setSelectedCube: this.setSelectedCube, setInspection: this.setInspection}}>
         <Provider store={store}>
           <NavigationApp/>
         </Provider>

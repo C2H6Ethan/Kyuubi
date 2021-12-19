@@ -1,6 +1,6 @@
 import { StatusBar } from 'expo-status-bar';
 import React, { Component } from 'react';
-import {Modal, Pressable, SafeAreaView, StyleSheet, Text, TouchableOpacity, View, Button, Image, Switch, TargetComponent } from 'react-native';
+import {Modal, Pressable, SafeAreaView, StyleSheet, Text, TouchableOpacity, View, Button, Image, Switch, TargetComponent, Alert } from 'react-native';
 import  AsyncStorage  from "@react-native-async-storage/async-storage";
 import { ScrollView, TouchableWithoutFeedback } from 'react-native-gesture-handler';
 import moment from 'moment';
@@ -14,6 +14,8 @@ import { bindActionCreators } from 'redux'
 import { switchTheme } from '../redux/actions'
 
 import { MyContext } from "../context";
+import { createNavigationContainer } from 'react-navigation';
+import { initialize } from 'scrambo/lib/scramblers/clock';
 
 class SolvesScreen extends Component{
     static contextType = MyContext;
@@ -50,12 +52,24 @@ class SolvesScreen extends Component{
            var solves = this.context.solves;
            var solve = solves[index];
            var solveTime = solve['time']
-           if(solve['isPlus2'] == true){solveTime = (Number(solveTime) + 2).toFixed(2);}
-           else{
-            if(solve['isDNF'] == true){solveTime = 'DNF'}
-           }
+           if(solve['isPlus2'] == true)
+            {
+               solveTime = (Number(solveTime) + 2).toFixed(2);
+               this.setState({ timerPlus2Style: {backgroundColor: 'lime'}});
+            }
+           else
+            {
+                if(solve['isDNF'] == true)
+                {
+                    solveTime = 'DNF';
+                    this.setState({ timerDNFStyle: {backgroundColor: 'lime'}});
+                }
+            }
            this.setState({modalTime: solveTime, modalDate: solve['date'], modalScramble: solve['scramble'],  modalCubeType: solve['cubeType'],currentSolveIndex: index,});
-    
+        }
+        else
+        {
+            this.setState({timerPlus2Style: {} ,timerDNFStyle: {}});
         }
     }
     componentDidMount = async () => {
@@ -86,18 +100,28 @@ class SolvesScreen extends Component{
         solves = JSON.parse(solves);
         solves = solves['solves'];
 
-        var newSolves = []
-        solves.forEach(solve => {
-            // if the solve doesn't match to solveToDelete add it to the new Array
-            if(!(solve['time'] == solveToDelete['time'] && solve['date'] == solveToDelete['date']))
-            {
-                newSolves.push(solve);
-            }
-        });
+        var indexToDelete = null;
 
-        var solvesToSave = {solves: newSolves};
+        var BreakException = {};
+        try{
+            solves.forEach((solve, i) => {
+                if(solve['timeInSeconds'] == solveToDelete['timeInSeconds'] && solve['date'] == solveToDelete['date'])
+                {
+                    indexToDelete = i;
+                    throw BreakException;
+                }
+            });
+        }
+        catch (e) {
+            if (e !== BreakException) throw e;
+        }
+
+        solves.splice(indexToDelete, 1);
+
+        var solvesToSave = {solves: solves};
         await AsyncStorage.setItem('solves', JSON.stringify(solvesToSave));
-        this.context.displayAverages();
+        this.context.getSolves();
+        this.recalculate(indexToDelete);
 
         this.setModalVisible(false, null);
     }
@@ -147,12 +171,308 @@ class SolvesScreen extends Component{
         }
     }
 
-    addPlus2 = async () => {
-        
+    addPlus2 = async (index) => {
+        let itemsCopy = this.context.solves;
+        var solveToChange = itemsCopy[index];
+
+        var solves = await AsyncStorage.getItem('solves');
+        solves = JSON.parse(solves);
+        solves = solves['solves'];
+
+        var indexToChange = null;
+
+        var BreakException = {};
+        try{
+            solves.forEach((solve, i) => {
+                // if the solve doesn't match to solveToDelete add it to the new Array
+                if(solve['timeInSeconds'] == solveToChange['timeInSeconds'] && solve['date'] == solveToChange['date'])
+                {
+                    indexToChange = i;
+                    throw BreakException;
+                }
+            });
+        }
+        catch (e) {
+            if (e !== BreakException) throw e;
+        }
+
+        if(solveToChange['isPlus2'] == true){
+            //remove 2
+
+            solves[indexToChange]['isPlus2'] = false;
+
+            var newSolves = {solves: solves};
+            await AsyncStorage.setItem('solves', JSON.stringify(newSolves));
+
+            this.context.getSolves();
+
+            var newModalTime = solves[indexToChange]['time'];
+
+            this.setState({timerPlus2Style: {}, modalTime: newModalTime})
+            this.recalculate(indexToChange);
+        }
+        else {
+            //add 2
+
+            solves[indexToChange]['isPlus2'] = true;
+            solves[indexToChange]['isDNF'] = false;
+
+            var newSolves = {solves: solves};
+            await AsyncStorage.setItem('solves', JSON.stringify(newSolves));
+
+            this.context.getSolves();
+
+            var newModalTime = (Number(solves[indexToChange]['time']) + 2).toFixed(2);
+
+            this.setState({timerPlus2Style: {backgroundColor: 'lime'}, timerDNFStyle: {}, modalTime: newModalTime})
+            this.recalculate(indexToChange);
+        }
     }
 
-    addDNF = async () => {
-        
+    
+
+    addDNF = async (index) => {
+        let itemsCopy = this.context.solves;
+        var solveToChange = itemsCopy[index];
+
+        var solves = await AsyncStorage.getItem('solves');
+        solves = JSON.parse(solves);
+        solves = solves['solves'];
+
+        var indexToChange = null;
+
+        var BreakException = {};
+        try{
+            solves.forEach((solve, i) => {
+                // if the solve doesn't match to solveToDelete add it to the new Array
+                if(solve['timeInSeconds'] == solveToChange['timeInSeconds'] && solve['date'] == solveToChange['date'])
+                {
+                    indexToChange = i;
+                    throw BreakException;
+                }
+            });
+        }
+        catch (e) {
+            if (e !== BreakException) throw e;
+        }
+
+        if(solveToChange['isDNF'] == true){
+            //remove DNF
+
+            solves[indexToChange]['isDNF'] = false;
+
+            var newSolves = {solves: solves};
+            await AsyncStorage.setItem('solves', JSON.stringify(newSolves));
+
+            this.context.getSolves();
+
+            var newModalTime = solves[indexToChange]['time'];
+
+            this.setState({timerDNFStyle: {}, modalTime: newModalTime})
+            this.recalculate(indexToChange);
+        }
+        else {
+            //add DNF
+            
+            solves[indexToChange]['isDNF'] = true;
+            solves[indexToChange]['isPlus2'] = false;
+
+            var newSolves = {solves: solves};
+            await AsyncStorage.setItem('solves', JSON.stringify(newSolves));
+
+            this.context.getSolves();
+
+            var newModalTime = 'DNF';
+
+            this.setState({timerDNFStyle: {backgroundColor: 'lime'}, timerPlus2Style: {}, modalTime: newModalTime})
+            this.recalculate(indexToChange);
+        }
+    }
+
+    recalculate = async (InitialIndex) =>{
+        var solves = await AsyncStorage.getItem("solves");
+        solves = JSON.parse(solves);
+        solves = solves['solves'];
+
+        for (var solveToChangeIndex = InitialIndex; solveToChangeIndex < solves.length; solveToChangeIndex++) {
+            var solvesBefore = [];
+            for (var solvesBeforeIndex = 0; solvesBeforeIndex < solveToChangeIndex; solvesBeforeIndex++) {
+                if (solves[solvesBeforeIndex]['cubeType'] == solves[InitialIndex]['cubeType']){solvesBefore.push(solves[solvesBeforeIndex])}
+            }
+
+            if(solvesBefore.length >= 2)
+            {
+                //calculate mo3
+                var sum = 0;
+                var values = [];
+                var isDNF = false;
+                for (var i = solveToChangeIndex - 2; i < solveToChangeIndex; i++){
+                    var currentSolve = solvesBefore[i];
+                    sum = sum + parseFloat(currentSolve['timeInSeconds']);
+                    if(currentSolve['isPlus2'] == true){sum = sum + 2}
+                    else{if(currentSolve['isDNF'] == true){isDNF = true}}
+                }
+                sum = sum + parseFloat(solves[solveToChangeIndex]['timeInSeconds']);
+                if(solves[solveToChangeIndex]['isPlus2'] == true){sum = sum + 2}
+                else{if(solves[solveToChangeIndex]['isDNF'] == true){isDNF = true}}
+                var mo3 = sum / 3;
+                mo3 = Number(mo3).toFixed(2);
+                solves[solveToChangeIndex]['mo3InSeconds'] = mo3;
+                if(mo3 > 60){mo3 = this.secToMin(mo3)};
+
+                if(isDNF){
+                    solves[solveToChangeIndex]['mo3'] = 'DNF'
+                }
+                else{
+                    solves[solveToChangeIndex]['mo3'] = mo3;
+                }
+
+                if (solvesBefore.length >= 4)
+                {
+                    //calculate ao5
+                    var sum = 0;
+                    var values = [];
+                    var isDNF = false;
+                    var DNFCounter = 0;
+                    for (var i = solveToChangeIndex - 4; i < solveToChangeIndex; i++){
+                        var currentSolve = solvesBefore[i];
+                        if(currentSolve['isPlus2'] == true){values.push(2)}
+                        else{
+                            if(currentSolve['isDNF']  == true){
+                                DNFCounter = DNFCounter + 1; if(DNFCounter >= 2){isDNF = true}
+                            }
+                            else{
+                                values.push(parseFloat(currentSolve['timeInSeconds']));
+                            }}
+                    }
+                    values.push(solves[solveToChangeIndex]['isPlus2']? parseFloat(solves[solveToChangeIndex]['timeInSeconds']) + 2 : parseFloat(solves[solveToChangeIndex]['timeInSeconds']));
+                    if(solves[solveToChangeIndex]['isDNF']){DNFCounter = DNFCounter + 1; if(DNFCounter >= 2){isDNF = true}}
+
+                    var max = Math.max(...values);
+                    var min = Math.min(...values);
+
+                    values.forEach(element =>{
+                        sum = sum + element;
+                    });
+                    if(DNFCounter == 1){sum = sum - min;}
+                    else{sum = sum - max - min;}
+                    
+                    var ao5 = sum / 3;
+                    ao5 = ao5.toFixed(2);
+                    solves[solveToChangeIndex]['ao5InSeconds'] = ao5;
+                    if(ao5>60){ao5 = this.secToMin(ao5)}
+
+                    if(isDNF){
+                        solves[solveToChangeIndex]['ao5'] = 'DNF'
+                    }
+                    else{
+                        solves[solveToChangeIndex]['ao5'] = ao5;
+                    }
+
+                    if(solvesBefore.length >= 11)
+                    {
+                        //calculate ao12
+                        var sum = 0;
+                        var values = [];
+                        var isDNF = false;
+                        var DNFCounter = 0;
+                        for (var i = solveToChangeIndex - 11; i < solveToChangeIndex; i++){
+                            var currentSolve = solvesBefore[i];
+                            if(currentSolve['isPlus2'] == true){values.push(2)}
+                            else{if(currentSolve['isDNF'] == true){DNFCounter = DNFCounter + 1; if(DNFCounter >= 2){isDNF = true}}else{values.push(parseFloat(currentSolve['timeInSeconds']));}}
+                        }
+                        values.push(solves[solveToChangeIndex]['isPlus2']? parseFloat(solves[solveToChangeIndex]['timeInSeconds']) + 2 : parseFloat(solves[solveToChangeIndex]['timeInSeconds']));
+                        if(solves[solveToChangeIndex]['isDNF']){DNFCounter = DNFCounter + 1; if(DNFCounter >= 2){isDNF = true}}
+
+                        var max = Math.max(...values);
+                        var min = Math.min(...values);
+
+                        values.forEach(element =>{
+                            sum = sum + element;
+                        });
+                        if(DNFCounter == 1){sum = sum - min;}
+                        else{sum = sum - max - min;}
+
+                        var ao12 = sum / 10;
+                        ao12 = ao12.toFixed(2);
+                        solves[solveToChangeIndex]['ao12InSeconds'] = ao12;
+                        if(ao12>60){ao12 = this.secToMin(ao12)}
+                        
+                        if(isDNF){
+                            solves[solveToChangeIndex]['ao12'] = 'DNF'
+                        }
+                        else{
+                            solves[solveToChangeIndex]['ao12'] = ao12;
+                        }
+
+                        if(solvesBefore.length >= 99)
+                        {
+                            //calculate ao100
+                            var sum = 0;
+                            var values = [];
+                            var isDNF = false;
+                            var DNFCounter = 0;
+                            for (var i = solveToChangeIndex - 99; i < solveToChangeIndex; i++){
+                                var currentSolve = solvesBefore[i];
+                                if(currentSolve['isPlus2'] == true){values.push(2)}
+                                else{if(currentSolve['isDNF'] == true){DNFCounter = DNFCounter + 1; if(DNFCounter >= 6){isDNF = true}}else{values.push(parseFloat(currentSolve['timeInSeconds']));}}
+                            }
+                            values.push(solves[solveToChangeIndex]['isPlus2']? parseFloat(solves[solveToChangeIndex]['timeInSeconds']) + 2 : parseFloat(solves[solveToChangeIndex]['timeInSeconds']));
+                            if(solves[solveToChangeIndex]['isDNF']){DNFCounter = DNFCounter + 1; if(DNFCounter >= 6){isDNF = true}}
+
+                            values.sort(function(a, b) {
+                                return a - b;
+                            });
+                            values.splice(0,5);
+                            values.reverse();
+                            values.splice(0,(5 - DNFCounter));
+
+                            values.forEach(element =>{
+                                sum = sum + element;
+                            });
+
+                            var ao100 = sum / 90;
+                            ao100 = ao100.toFixed(2);
+                            solves[solveToChangeIndex]['ao100InSeconds'] = ao100;
+                            if(ao100>60){ao100 = this.secToMin(ao100)}
+                            
+                            if(isDNF){
+                                solves[solveToChangeIndex]['ao100'] = 'DNF'
+                            }
+                            else{
+                                solves[solveToChangeIndex]['ao100'] = ao100;
+                            }
+                        }
+                    }
+                }
+            }
+            else{
+                solves[solveToChangeIndex]['mo3'] = '-';
+                solves[solveToChangeIndex]['ao5'] = '-';
+                solves[solveToChangeIndex]['ao12'] = '-';
+                solves[solveToChangeIndex]['ao100'] = '-';
+            }
+        }
+
+        var newSolves = {solves: solves};
+        await AsyncStorage.setItem('solves', JSON.stringify(newSolves));
+
+        this.context.getSolves();
+        this.context.displayAverages();
+    }
+
+    deleteSolveAlert = () => {
+        Alert.alert(
+            "Solve Deletion",
+            "Are you sure you want to delete your solve?",
+            [
+                {
+                text: "No",
+                style: "cancel"
+                },
+                { text: "Yes", onPress: () => this.deleteSolve(this.state.currentSolveIndex) }
+            ]
+        );
     }
 
 
@@ -184,9 +504,9 @@ class SolvesScreen extends Component{
                             <ModalText>{this.state.modalScramble}</ModalText>
                             <ModalText>{this.state.modalDate}</ModalText>
                             <View style={styles.timerButtons}>
-                                <TimerButton activeOpacity={1} onPressIn={() => this.deleteSolve(this.state.currentSolveIndex)}><TimerButtonText>X</TimerButtonText></TimerButton>
-                                <TimerButton activeOpacity={1} onPressIn={this.addPlus2} style={this.state.timerPlus2Style}><TimerButtonText>+2</TimerButtonText></TimerButton>
-                                <TimerButton activeOpacity={1} onPressIn={this.addDNF} style={this.state.timerDNFStyle}><TimerButtonText>DNF</TimerButtonText></TimerButton>
+                                <TimerButton activeOpacity={1} onPressIn={this.deleteSolveAlert}><TimerButtonText>X</TimerButtonText></TimerButton>
+                                <TimerButton activeOpacity={1} onPressIn={() => this.addPlus2(this.state.currentSolveIndex)} style={this.state.timerPlus2Style}><TimerButtonText>+2</TimerButtonText></TimerButton>
+                                <TimerButton activeOpacity={1} onPressIn={() => this.addDNF(this.state.currentSolveIndex)} style={this.state.timerDNFStyle}><TimerButtonText>DNF</TimerButtonText></TimerButton>
                             </View>
                             </ModalView>
                         </View>
