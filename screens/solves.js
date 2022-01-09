@@ -10,7 +10,7 @@ import { useFocusEffect } from '@react-navigation/native';
 
 import styled, { ThemeProvider } from 'styled-components/native'
 import { connect } from 'react-redux'
-import { bindActionCreators } from 'redux'
+import { bindActionCreators, combineReducers } from 'redux'
 import { switchTheme } from '../redux/actions'
 
 import { MyContext } from "../context";
@@ -306,8 +306,9 @@ class SolvesScreen extends Component{
                 var sum = 0;
                 var values = [];
                 var isDNF = false;
-                for (var i = solveToChangeIndex - 2; i < solveToChangeIndex; i++){
+                for (var i = 0; i < 2; i++){
                     var currentSolve = solvesBefore[i];
+                    console.warn(solvesBefore[i])
                     sum = sum + parseFloat(currentSolve['timeInSeconds']);
                     if(currentSolve['isPlus2'] == true){sum = sum + 2}
                     else{if(currentSolve['isDNF'] == true){isDNF = true}}
