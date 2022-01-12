@@ -295,94 +295,57 @@ class SolvesScreen extends Component{
         solves = solves['solves'];
 
         for (var solveToChangeIndex = InitialIndex; solveToChangeIndex < solves.length; solveToChangeIndex++) {
-            var solvesBefore = [];
-            for (var solvesBeforeIndex = 0; solvesBeforeIndex < solveToChangeIndex; solvesBeforeIndex++) {
-                if (solves[solvesBeforeIndex]['cubeType'] == solves[InitialIndex]['cubeType']){solvesBefore.push(solves[solvesBeforeIndex])}
-            }
-            console.warn(solvesBefore)
-
-            if(solvesBefore.length >= 2)
-            {
-                //calculate mo3
-                var sum = 0;
-                var values = [];
-                var isDNF = false;
-                for (var i = 0; i < 2; i++){
-                    var currentSolve = solvesBefore[i];
-                    sum = sum + parseFloat(currentSolve['timeInSeconds']);
-                    if(currentSolve['isPlus2'] == true){sum = sum + 2}
-                    else{if(currentSolve['isDNF'] == true){isDNF = true}}
-                }
-                sum = sum + parseFloat(solves[solveToChangeIndex]['timeInSeconds']);
-                if(solves[solveToChangeIndex]['isPlus2'] == true){sum = sum + 2}
-                else{if(solves[solveToChangeIndex]['isDNF'] == true){isDNF = true}}
-                var mo3 = sum / 3;
-                mo3 = Number(mo3).toFixed(2);
-                solves[solveToChangeIndex]['mo3InSeconds'] = mo3;
-                if(mo3 > 60){mo3 = this.secToMin(mo3)};
-
-                if(isDNF){
-                    solves[solveToChangeIndex]['mo3'] = 'DNF'
-                }
-                else{
-                    solves[solveToChangeIndex]['mo3'] = mo3;
+            if(solves[solveToChangeIndex]['cubeType'] == solves[InitialIndex]['cubeType']){
+                var solvesBefore = [];
+                for (var solvesBeforeIndex = 0; solvesBeforeIndex < solveToChangeIndex; solvesBeforeIndex++) {
+                    if (solves[solvesBeforeIndex]['cubeType'] == solves[InitialIndex]['cubeType']){solvesBefore.push(solves[solvesBeforeIndex])}
                 }
 
-                if (solvesBefore.length >= 4)
+                if(solvesBefore.length >= 2)
                 {
-                    //calculate ao5
+                    //calculate mo3
                     var sum = 0;
                     var values = [];
                     var isDNF = false;
-                    var DNFCounter = 0;
-                    for (var i = solveToChangeIndex - 4; i < solveToChangeIndex; i++){
+                    for (var i = 0; i < 2; i++){
                         var currentSolve = solvesBefore[i];
-                        if(currentSolve['isPlus2'] == true){values.push(2)}
-                        else{
-                            if(currentSolve['isDNF']  == true){
-                                DNFCounter = DNFCounter + 1; if(DNFCounter >= 2){isDNF = true}
-                            }
-                            else{
-                                values.push(parseFloat(currentSolve['timeInSeconds']));
-                            }
-                        }
+                        sum = sum + parseFloat(currentSolve['timeInSeconds']);
+                        if(currentSolve['isPlus2'] == true){sum = sum + 2}
+                        else{if(currentSolve['isDNF'] == true){isDNF = true}}
                     }
-                    values.push(solves[solveToChangeIndex]['isPlus2']? parseFloat(solves[solveToChangeIndex]['timeInSeconds']) + 2 : parseFloat(solves[solveToChangeIndex]['timeInSeconds']));
-                    if(solves[solveToChangeIndex]['isDNF']){DNFCounter = DNFCounter + 1; if(DNFCounter >= 2){isDNF = true}}
-
-                    var max = Math.max(...values);
-                    var min = Math.min(...values);
-
-                    values.forEach(element =>{
-                        sum = sum + element;
-                    });
-                    if(DNFCounter == 1){sum = sum - min;}
-                    else{sum = sum - max - min;}
-                    
-                    var ao5 = sum / 3;
-                    ao5 = ao5.toFixed(2);
-                    solves[solveToChangeIndex]['ao5InSeconds'] = ao5;
-                    if(ao5>60){ao5 = this.secToMin(ao5)}
+                    sum = sum + parseFloat(solves[solveToChangeIndex]['timeInSeconds']);
+                    if(solves[solveToChangeIndex]['isPlus2'] == true){sum = sum + 2}
+                    else{if(solves[solveToChangeIndex]['isDNF'] == true){isDNF = true}}
+                    var mo3 = sum / 3;
+                    mo3 = Number(mo3).toFixed(2);
+                    solves[solveToChangeIndex]['mo3InSeconds'] = mo3;
+                    if(mo3 > 60){mo3 = this.secToMin(mo3)};
 
                     if(isDNF){
-                        solves[solveToChangeIndex]['ao5'] = 'DNF'
+                        solves[solveToChangeIndex]['mo3'] = 'DNF'
                     }
                     else{
-                        solves[solveToChangeIndex]['ao5'] = ao5;
+                        solves[solveToChangeIndex]['mo3'] = mo3;
                     }
 
-                    if(solvesBefore.length >= 11)
+                    if (solvesBefore.length >= 4)
                     {
-                        //calculate ao12
+                        //calculate ao5
                         var sum = 0;
                         var values = [];
                         var isDNF = false;
                         var DNFCounter = 0;
-                        for (var i = solveToChangeIndex - 11; i < solveToChangeIndex; i++){
+                        for (var i = solveToChangeIndex - 4; i < solveToChangeIndex; i++){
                             var currentSolve = solvesBefore[i];
                             if(currentSolve['isPlus2'] == true){values.push(2)}
-                            else{if(currentSolve['isDNF'] == true){DNFCounter = DNFCounter + 1; if(DNFCounter >= 2){isDNF = true}}else{values.push(parseFloat(currentSolve['timeInSeconds']));}}
-                            
+                            else{
+                                if(currentSolve['isDNF']  == true){
+                                    DNFCounter = DNFCounter + 1; if(DNFCounter >= 2){isDNF = true}
+                                }
+                                else{
+                                    values.push(parseFloat(currentSolve['timeInSeconds']));
+                                }
+                            }
                         }
                         values.push(solves[solveToChangeIndex]['isPlus2']? parseFloat(solves[solveToChangeIndex]['timeInSeconds']) + 2 : parseFloat(solves[solveToChangeIndex]['timeInSeconds']));
                         if(solves[solveToChangeIndex]['isDNF']){DNFCounter = DNFCounter + 1; if(DNFCounter >= 2){isDNF = true}}
@@ -395,66 +358,105 @@ class SolvesScreen extends Component{
                         });
                         if(DNFCounter == 1){sum = sum - min;}
                         else{sum = sum - max - min;}
-
-                        var ao12 = sum / 10;
-                        ao12 = ao12.toFixed(2);
-                        solves[solveToChangeIndex]['ao12InSeconds'] = ao12;
-                        if(ao12>60){ao12 = this.secToMin(ao12)}
                         
+                        var ao5 = sum / 3;
+                        ao5 = ao5.toFixed(2);
+                        solves[solveToChangeIndex]['ao5InSeconds'] = ao5;
+                        if(ao5>60){ao5 = this.secToMin(ao5)}
+
                         if(isDNF){
-                            solves[solveToChangeIndex]['ao12'] = 'DNF'
+                            solves[solveToChangeIndex]['ao5'] = 'DNF'
                         }
                         else{
-                            solves[solveToChangeIndex]['ao12'] = ao12;
+                            solves[solveToChangeIndex]['ao5'] = ao5;
                         }
 
-                        if(solvesBefore.length >= 99)
+                        if(solvesBefore.length >= 11)
                         {
-                            //calculate ao100
+                            //calculate ao12
                             var sum = 0;
                             var values = [];
                             var isDNF = false;
                             var DNFCounter = 0;
-                            for (var i = solveToChangeIndex - 99; i < solveToChangeIndex; i++){
+                            for (var i = solveToChangeIndex - 11; i < solveToChangeIndex; i++){
                                 var currentSolve = solvesBefore[i];
                                 if(currentSolve['isPlus2'] == true){values.push(2)}
-                                else{if(currentSolve['isDNF'] == true){DNFCounter = DNFCounter + 1; if(DNFCounter >= 6){isDNF = true}}else{values.push(parseFloat(currentSolve['timeInSeconds']));}}
+                                else{if(currentSolve['isDNF'] == true){DNFCounter = DNFCounter + 1; if(DNFCounter >= 2){isDNF = true}}else{values.push(parseFloat(currentSolve['timeInSeconds']));}}
+                                
                             }
                             values.push(solves[solveToChangeIndex]['isPlus2']? parseFloat(solves[solveToChangeIndex]['timeInSeconds']) + 2 : parseFloat(solves[solveToChangeIndex]['timeInSeconds']));
-                            if(solves[solveToChangeIndex]['isDNF']){DNFCounter = DNFCounter + 1; if(DNFCounter >= 6){isDNF = true}}
+                            if(solves[solveToChangeIndex]['isDNF']){DNFCounter = DNFCounter + 1; if(DNFCounter >= 2){isDNF = true}}
 
-                            values.sort(function(a, b) {
-                                return a - b;
-                            });
-                            values.splice(0,5);
-                            values.reverse();
-                            values.splice(0,(5 - DNFCounter));
+                            var max = Math.max(...values);
+                            var min = Math.min(...values);
 
                             values.forEach(element =>{
                                 sum = sum + element;
                             });
+                            if(DNFCounter == 1){sum = sum - min;}
+                            else{sum = sum - max - min;}
 
-                            var ao100 = sum / 90;
-                            ao100 = ao100.toFixed(2);
-                            solves[solveToChangeIndex]['ao100InSeconds'] = ao100;
-                            if(ao100>60){ao100 = this.secToMin(ao100)}
+                            var ao12 = sum / 10;
+                            ao12 = ao12.toFixed(2);
+                            solves[solveToChangeIndex]['ao12InSeconds'] = ao12;
+                            if(ao12>60){ao12 = this.secToMin(ao12)}
                             
                             if(isDNF){
-                                solves[solveToChangeIndex]['ao100'] = 'DNF'
+                                solves[solveToChangeIndex]['ao12'] = 'DNF'
                             }
                             else{
-                                solves[solveToChangeIndex]['ao100'] = ao100;
+                                solves[solveToChangeIndex]['ao12'] = ao12;
+                            }
+
+                            if(solvesBefore.length >= 99)
+                            {
+                                //calculate ao100
+                                var sum = 0;
+                                var values = [];
+                                var isDNF = false;
+                                var DNFCounter = 0;
+                                for (var i = solveToChangeIndex - 99; i < solveToChangeIndex; i++){
+                                    var currentSolve = solvesBefore[i];
+                                    if(currentSolve['isPlus2'] == true){values.push(2)}
+                                    else{if(currentSolve['isDNF'] == true){DNFCounter = DNFCounter + 1; if(DNFCounter >= 6){isDNF = true}}else{values.push(parseFloat(currentSolve['timeInSeconds']));}}
+                                }
+                                values.push(solves[solveToChangeIndex]['isPlus2']? parseFloat(solves[solveToChangeIndex]['timeInSeconds']) + 2 : parseFloat(solves[solveToChangeIndex]['timeInSeconds']));
+                                if(solves[solveToChangeIndex]['isDNF']){DNFCounter = DNFCounter + 1; if(DNFCounter >= 6){isDNF = true}}
+
+                                values.sort(function(a, b) {
+                                    return a - b;
+                                });
+                                values.splice(0,5);
+                                values.reverse();
+                                values.splice(0,(5 - DNFCounter));
+
+                                values.forEach(element =>{
+                                    sum = sum + element;
+                                });
+
+                                var ao100 = sum / 90;
+                                ao100 = ao100.toFixed(2);
+                                solves[solveToChangeIndex]['ao100InSeconds'] = ao100;
+                                if(ao100>60){ao100 = this.secToMin(ao100)}
+                                
+                                if(isDNF){
+                                    solves[solveToChangeIndex]['ao100'] = 'DNF'
+                                }
+                                else{
+                                    solves[solveToChangeIndex]['ao100'] = ao100;
+                                }
                             }
                         }
                     }
                 }
+                else{
+                    solves[solveToChangeIndex]['mo3'] = '-';
+                    solves[solveToChangeIndex]['ao5'] = '-';
+                    solves[solveToChangeIndex]['ao12'] = '-';
+                    solves[solveToChangeIndex]['ao100'] = '-';
+                }
             }
-            else{
-                solves[solveToChangeIndex]['mo3'] = '-';
-                solves[solveToChangeIndex]['ao5'] = '-';
-                solves[solveToChangeIndex]['ao12'] = '-';
-                solves[solveToChangeIndex]['ao100'] = '-';
-            }
+            
         }
 
         var newSolves = {solves: solves};

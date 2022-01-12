@@ -75,7 +75,7 @@ export default class App extends Component {
         bestAo12: '-',
         bestAo100: '-',
 
-        selectedCube: '3x3',
+        selectedCube: '',
 
         showAds: true,
         isPro: true,
@@ -85,7 +85,10 @@ export default class App extends Component {
   }
 
   componentDidMount = async() => {
+    this.getFirstSession();
     this.getSolves();
+    this.displayAverages();
+
     // IAP.getProducts(productIds).then((res) => {
     //   console.warn(res);
     // });
@@ -101,6 +104,18 @@ export default class App extends Component {
     }
     var solvesToSave = {solves: solves};
     await AsyncStorage.setItem("solves", JSON.stringify(solvesToSave));
+  }
+
+  getFirstSession = async() => {
+    var sessions = await AsyncStorage.getItem('sessions')
+    if(sessions == null){
+      this.setState({selectedCube: '3x3'});
+    }
+    else{
+      sessions = JSON.parse(sessions);
+      sessions = sessions['sessions'];
+      this.setState({selectedCube: sessions[0]['name']});
+    }
   }
 
   getSolves = async() => {

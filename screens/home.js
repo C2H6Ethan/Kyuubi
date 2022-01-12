@@ -81,8 +81,6 @@ class HomeScreen extends Component{
 
         this.checkSwitches();
 
-        this.context.displayAverages();
-
         this.getSessions();
 
         this.getScramble();
