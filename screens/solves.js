@@ -299,6 +299,7 @@ class SolvesScreen extends Component{
             for (var solvesBeforeIndex = 0; solvesBeforeIndex < solveToChangeIndex; solvesBeforeIndex++) {
                 if (solves[solvesBeforeIndex]['cubeType'] == solves[InitialIndex]['cubeType']){solvesBefore.push(solves[solvesBeforeIndex])}
             }
+            console.warn(solvesBefore)
 
             if(solvesBefore.length >= 2)
             {
@@ -308,7 +309,6 @@ class SolvesScreen extends Component{
                 var isDNF = false;
                 for (var i = 0; i < 2; i++){
                     var currentSolve = solvesBefore[i];
-                    console.warn(solvesBefore[i])
                     sum = sum + parseFloat(currentSolve['timeInSeconds']);
                     if(currentSolve['isPlus2'] == true){sum = sum + 2}
                     else{if(currentSolve['isDNF'] == true){isDNF = true}}
@@ -344,7 +344,8 @@ class SolvesScreen extends Component{
                             }
                             else{
                                 values.push(parseFloat(currentSolve['timeInSeconds']));
-                            }}
+                            }
+                        }
                     }
                     values.push(solves[solveToChangeIndex]['isPlus2']? parseFloat(solves[solveToChangeIndex]['timeInSeconds']) + 2 : parseFloat(solves[solveToChangeIndex]['timeInSeconds']));
                     if(solves[solveToChangeIndex]['isDNF']){DNFCounter = DNFCounter + 1; if(DNFCounter >= 2){isDNF = true}}
@@ -381,6 +382,7 @@ class SolvesScreen extends Component{
                             var currentSolve = solvesBefore[i];
                             if(currentSolve['isPlus2'] == true){values.push(2)}
                             else{if(currentSolve['isDNF'] == true){DNFCounter = DNFCounter + 1; if(DNFCounter >= 2){isDNF = true}}else{values.push(parseFloat(currentSolve['timeInSeconds']));}}
+                            
                         }
                         values.push(solves[solveToChangeIndex]['isPlus2']? parseFloat(solves[solveToChangeIndex]['timeInSeconds']) + 2 : parseFloat(solves[solveToChangeIndex]['timeInSeconds']));
                         if(solves[solveToChangeIndex]['isDNF']){DNFCounter = DNFCounter + 1; if(DNFCounter >= 2){isDNF = true}}
@@ -616,7 +618,7 @@ const PageNavigator = styled.View`
     padding-vertical: 15px;
     padding-horizontal: 15px;
     border-radius: 60px;
-    width: 250px;
+    width: 60%;
     backgroundColor: ${props => props.theme.SECONDARY_BACKGROUND_COLOR};
 `
 

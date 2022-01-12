@@ -26,6 +26,7 @@ class SettingsScreen extends Component{
             themes: ['default', 'dark', 'light', 'red', 'avocado', 'cotton candy' ],
 
             picker: null,
+            tipModalVisible: false,
         };
 
     }
@@ -97,7 +98,6 @@ class SettingsScreen extends Component{
                 this.setState({currentTheme: 'default'});
                 this.storeData('theme', 'default');
         }
-        this.setThemeModalVisible(false);
     }
 
     componentDidMount(){
@@ -141,16 +141,13 @@ class SettingsScreen extends Component{
         }
     }
 
-    setBackgroundModalVisible = (visible, index) => {
-        this.setState({ backgroundModalVisible: visible });
-    }
 
     onBackgroundColorChange = (newColor) =>{
         this.setState({backgroundColor: newColor});
     }
 
-    setThemeModalVisible = (visible, index) => {
-        this.setState({ themeModalVisible: visible });
+    setTipModalVisible = (visible, index) => {
+        this.setState({ tipModalVisible: visible });
     }
 
     onAccentColorChange = (newColor) =>{
@@ -159,7 +156,7 @@ class SettingsScreen extends Component{
 
     render(){
         const { navigate } = this.props.navigation;
-        const { themeModalVisible } = this.state;
+        const { tipModalVisible } = this.state;
 
         let themes = this.state.themes.map( (s, i) => {
             return <Picker.Item  key={i} value={this.state.themes[i]} label={this.state.themes[i]} />
@@ -173,6 +170,33 @@ class SettingsScreen extends Component{
                     <View>
                         {context.showAds == true && context.isPro == false? <BannerAd/> : null}
                     </View>
+                        <Modal
+                        animationType="slide"
+                        transparent={true}
+                        visible={tipModalVisible}
+                        onRequestClose={() => {
+                            this.setModalVisible(!tipModalVisible);
+                        }}
+                        >
+                            <TouchableOpacity activeOpacity={1} onPress={() => this.setTipModalVisible(!tipModalVisible)} style={{flex: 1,justifyContent: 'center',alignItems: 'center'}}>
+                            <TouchableOpacity activeOpacity={1} style={{width: 375, height: 250}}>
+                            <View style={styles.centeredView}>
+                                <ModalView>
+                                    <ModalTitle>Buy me a Coffee</ModalTitle>
+                                    <View style={{flexDirection: 'row'}}>
+                                        <Tips><TipText>$1.00</TipText></Tips>
+                                        <Tips><TipText>$2.00</TipText></Tips>
+                                    </View>
+                                    <View style={{flexDirection: 'row'}}>
+                                        <Tips><TipText>$5.00</TipText></Tips>
+                                        <Tips><TipText>$10.00</TipText></Tips>
+                                    </View>
+                                    
+                                </ModalView>
+                            </View>
+                            </TouchableOpacity>
+                            </TouchableOpacity>
+                        </Modal>
                         <StatusBar style="auto" />
                         <View style={styles.settings}>
                             <SettingWrapper>
@@ -214,6 +238,14 @@ class SettingsScreen extends Component{
                                         {themes}
                                 </ThemeSelector>
                             </SettingWrapper>
+                            
+                            {/* <TouchableOpacity activeOpacity={1} onPress={() => this.setTipModalVisible(!tipModalVisible)} >
+                                <SettingWrapper>
+                                    <Text style={styles.settingText}>
+                                        Buy me a Coffee
+                                    </Text>
+                                </SettingWrapper>
+                            </TouchableOpacity> */}
                         </View>
     
     
@@ -237,7 +269,11 @@ class SettingsScreen extends Component{
 }
 
 const styles = StyleSheet.create({
-    
+    centeredView: {
+        flex: 1,
+        justifyContent: "center",
+        alignItems: "center",
+    },
     pagesButton: {
         width: 25,
         height: 25,
@@ -282,7 +318,18 @@ const Container = styled.SafeAreaView`
   align-items: center;
   width: 100%;
 `
-
+const Tips = styled.TouchableOpacity`
+    align-items: center;
+    justify-content: center;
+    background-color: ${props => props.theme.SECONDARY_BACKGROUND_COLOR};
+    width: 80px;
+    padding: 10px;
+    borderRadius: 60px;
+    margin: 10px;
+`
+const TipText = styled.Text`
+    color: ${props => props.theme.SECONDARY_TEXT_COLOR};
+`
 const PageNavigator = styled.View`
     position: absolute;
     bottom: 3%;
@@ -292,7 +339,7 @@ const PageNavigator = styled.View`
     padding-vertical: 15px;
     padding-horizontal: 15px;
     border-radius: 60px;
-    width: 250px;
+    width: 60%;
     backgroundColor: ${props => props.theme.SECONDARY_BACKGROUND_COLOR};
 `
 const ModalView = styled.View`
@@ -309,6 +356,13 @@ const ModalView = styled.View`
 `
 const ModalText = styled.Text`
     color: ${props => props.theme.PRIMARY_TEXT_COLOR};
+    text-align: center;
+`
+const ModalTitle = styled.Text`
+    color: ${props => props.theme.PRIMARY_TEXT_COLOR};
+    text-align: center;
+    fontSize: 20px;
+    fontWeight: bold;
 `
 const ThemeSelector = styled.Picker`
     backgroundColor: ${props => props.theme.SECONDARY_BACKGROUND_COLOR};
@@ -322,7 +376,7 @@ const SettingWrapper = styled.View`
     paddingVertical: 15px;
     paddingHorizontal: 15px;
     borderRadius: 60px;
-    width: 350px;
+    minWidth: 60%;
     backgroundColor: ${props => props.theme.SECONDARY_BACKGROUND_COLOR};
     margin: 10px;
     height: 60px;

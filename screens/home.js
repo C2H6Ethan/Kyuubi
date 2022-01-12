@@ -897,13 +897,13 @@ const PageNavigator = styled.View`
     padding-vertical: 15px;
     padding-horizontal: 15px;
     border-radius: 60px;
-    width: 250px;
+    width: 60%;
     backgroundColor: ${props => props.theme.SECONDARY_BACKGROUND_COLOR};
 `
 const ScrambleSelector = styled.Picker`
     backgroundColor: ${props => props.theme.SECONDARY_BACKGROUND_COLOR};
     borderRadius: 10px;
-    width: 150px;
+    minWidth: 70%;
     height: 40%;
 `
 const Selector = styled.Picker`
