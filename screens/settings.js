@@ -283,7 +283,7 @@ const styles = StyleSheet.create({
         height: 35,
     },
     settings: {
-        margin: 10,
+        width: '90%'
     },
     backgroundColorSquare: {
         width: 50, 
@@ -376,9 +376,10 @@ const SettingWrapper = styled.View`
     paddingVertical: 15px;
     paddingHorizontal: 15px;
     borderRadius: 60px;
-    minWidth: 60%;
+    minWidth: 100%;
     backgroundColor: ${props => props.theme.SECONDARY_BACKGROUND_COLOR};
-    margin: 10px;
+    marginTop: 10px;
+    marginBottom: 10px;
     height: 60px;
 `
 

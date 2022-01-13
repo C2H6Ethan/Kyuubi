@@ -124,6 +124,15 @@ export default class App extends Component {
       solves = JSON.parse(solves);
       solves = solves['solves'];
 
+      //solves Filter
+      
+      var solvesFilter = await AsyncStorage.getItem('filterItem');
+      if (solvesFilter == 'time')
+      {
+        solves = solves.sort((a, b) => parseFloat(a.timeInSeconds) - parseFloat(b.timeInSeconds))
+        solves.reverse();
+      }
+
       //filter solves with cube type
       var cubeType = this.state.selectedCube;
       var filteredArray = []

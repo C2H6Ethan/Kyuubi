@@ -293,14 +293,27 @@ class SolvesScreen extends Component{
         var solves = await AsyncStorage.getItem("solves");
         solves = JSON.parse(solves);
         solves = solves['solves'];
+        //check if newest solve got deleted
+        if(InitialIndex != solves.length){
+            //remove solves with same cube type
+            var solvesWithoutCubeType = [];
+            var solvesWithCubeType = [];
+            solves.forEach(element => {
+                if(element['cubeType'] != solves[InitialIndex]['cubeType']){solvesWithoutCubeType.push(element)}
+                else{solvesWithCubeType.push(element)}
+            });
 
-        for (var solveToChangeIndex = InitialIndex; solveToChangeIndex < solves.length; solveToChangeIndex++) {
-            if(solves[solveToChangeIndex]['cubeType'] == solves[InitialIndex]['cubeType']){
+            var solveToChangeIndex = solvesWithCubeType.findIndex(x => x == solves[InitialIndex]);
+
+            solves = solvesWithCubeType;
+
+            for (solveToChangeIndex; solveToChangeIndex < solvesWithCubeType.length; solveToChangeIndex++) {
                 var solvesBefore = [];
                 for (var solvesBeforeIndex = 0; solvesBeforeIndex < solveToChangeIndex; solvesBeforeIndex++) {
-                    if (solves[solvesBeforeIndex]['cubeType'] == solves[InitialIndex]['cubeType']){solvesBefore.push(solves[solvesBeforeIndex])}
+                    solvesBefore.push(solves[solvesBeforeIndex])
                 }
-
+                solvesBefore.reverse();
+                
                 if(solvesBefore.length >= 2)
                 {
                     //calculate mo3
@@ -455,14 +468,16 @@ class SolvesScreen extends Component{
                     solves[solveToChangeIndex]['ao12'] = '-';
                     solves[solveToChangeIndex]['ao100'] = '-';
                 }
+                
             }
-            
+
+            solves = solves.concat(solvesWithoutCubeType);
+
+            var newSolves = {solves: solves};
+            await AsyncStorage.setItem('solves', JSON.stringify(newSolves));
+
+            this.context.getSolves();
         }
-
-        var newSolves = {solves: solves};
-        await AsyncStorage.setItem('solves', JSON.stringify(newSolves));
-
-        this.context.getSolves();
         this.context.displayAverages();
     }
 

@@ -388,6 +388,10 @@ class HomeScreen extends Component{
             sessions = {sessions: sessions}
             await AsyncStorage.setItem('sessions', JSON.stringify(sessions));
             this.setState({modalCubeType: null});
+
+            //set session to new session
+            var index = sessions['sessions'].length - 1;
+            this.setSelectedSession(textFromInput, index);
         }
 
         
@@ -826,9 +830,10 @@ const styles = StyleSheet.create({
         justifyContent: 'center',
         alignItems: 'center',
         width: '100%',
+        bottom: '18%',
+        marginTop: '30%',
     },
     timerButtons:{
-        bottom: '35%',
         justifyContent: 'space-evenly',
         alignItems: 'center',
         flexDirection: 'row',
@@ -836,7 +841,7 @@ const styles = StyleSheet.create({
     averages: {
         justifyContent: 'space-evenly',
         alignItems: 'center',
-        bottom: 90,
+        bottom: '20%',
         flexDirection: 'row',
         width: '100%',
         
@@ -969,7 +974,6 @@ const AveragesText = styled.Text`
 const TimerText = styled.Text`
     color: ${props => props.theme.PRIMARY_TEXT_COLOR};
     fontSize: 75px;
-    bottom: 25%;
 `
 const TimerButton = styled.TouchableOpacity`
     align-items: center;
