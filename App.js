@@ -15,11 +15,11 @@ import { Provider } from 'react-redux'
 import { createStore, applyMiddleware, combineReducers } from 'redux'
 import thunk from 'redux-thunk'
 import themeReducer from './redux/themeReducer'
-
+import { activateKeepAwake, deactivateKeepAwake } from 'expo-keep-awake';
 import { MyContext } from "./context";
-// import IAP from 'react-native-iap';
 
-// const productIds = [ 'com.kyuubi.removeAds']
+import IAP from 'react-native-iap';
+const productIds = ['com.kyuubi.tip2']
 
 const store = createStore(
   combineReducers({ themeReducer}),
@@ -85,13 +85,21 @@ export default class App extends Component {
   }
 
   componentDidMount = async() => {
+    activateKeepAwake(); 
     this.getFirstSession();
     this.getSolves();
     this.displayAverages();
 
-    // IAP.getProducts(productIds).then((res) => {
-    //   console.warn(res);
-    // });
+    IAP.initConnection().catch(() => {
+      console.log("error connecting to store")
+    }).then(() =>{
+      console.log("connected to store")
+      IAP.getProducts(productIds).catch(() => {
+        console.log("error getting products")
+      }).then((res) => {
+        console.warn(res);
+      });
+    })
   }
 
   addDummySolves = async() => {

@@ -17,13 +17,17 @@
     "expo": "^43.0.0",
     "expo-ads-admob": "^11.0.3",
     "expo-cli": "^4.3.0",
+    "expo-keep-awake": "~10.0.0",
     "expo-status-bar": "~1.1.0",
+    "expo-store-review": "~5.0.3",
     "moment": "^2.29.1",
     "react": "17.0.1",
     "react-dom": "17.0.1",
     "react-native": "^0.64.3",
     "react-native-gesture-handler": "^1.10.3",
     "react-native-iap": "^5.2.3",
+    "react-native-in-app-review": "^3.3.1",
+    "react-native-keep-awake": "^4.0.0",
     "react-native-reanimated": "~2.2.0",
     "react-native-safe-area-context": "3.3.2",
     "react-native-screens": "~3.8.0",
@@ -37,7 +41,8 @@
     "redux-thunk": "^2.4.0",
     "scrambo": "^0.3.0",
     "styled-components": "^5.3.3",
-    "write-json-file": "^5.0.0"
+    "write-json-file": "^5.0.0",
+    "expo-linking": "~2.4.2"
   },
   "devDependencies": {
     "@babel/core": "^7.12.9"

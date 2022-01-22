@@ -8,6 +8,7 @@ import Square from '../components/Square';
 import AsyncStorage  from "@react-native-async-storage/async-storage";
 import moment from 'moment';
 import BannerAd from "../Ads/BannerAdHome";
+import * as StoreReview from 'expo-store-review';
 
 import styled, { ThemeProvider } from 'styled-components/native'
 import { connect } from 'react-redux'
@@ -214,6 +215,10 @@ class HomeScreen extends Component{
                 solves.push(solve);
                 var newSolves = {solves : solves};
                 await AsyncStorage.setItem("solves", JSON.stringify(newSolves));
+
+                if(solves.length == 100){
+                    this.triggerReview();
+                }
             }
             // refresh context solves
             this.context.getSolves();
@@ -600,6 +605,10 @@ class HomeScreen extends Component{
             var newTimerText = 'DNF';
             this.setState({timerText: newTimerText, timerDNFStyle: {backgroundColor: 'lime'}, timerPlus2Style: {}})
         }
+    }
+
+    triggerReview = () =>{
+        StoreReview.requestReview();
     }
 
     render(){
