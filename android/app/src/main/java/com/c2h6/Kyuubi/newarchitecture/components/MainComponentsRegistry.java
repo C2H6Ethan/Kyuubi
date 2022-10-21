@@ -1,4 +1,4 @@
-package com.kyuubi.newarchitecture.components;
+package com.c2h6.Kyuubi.newarchitecture.components;
 
 import com.facebook.jni.HybridData;
 import com.facebook.proguard.annotations.DoNotStrip;

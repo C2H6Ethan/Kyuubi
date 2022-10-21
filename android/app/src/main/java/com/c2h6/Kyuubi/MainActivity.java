@@ -1,4 +1,4 @@
-package com.kyuubi;
+package com.c2h6.Kyuubi;
 
 import android.os.Build;
 import android.os.Bundle;

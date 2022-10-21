@@ -1,4 +1,4 @@
-package com.kyuubi.newarchitecture;
+package com.c2h6.Kyuubi.newarchitecture;
 
 import android.app.Application;
 import androidx.annotation.NonNull;
@@ -20,9 +20,9 @@ import com.facebook.react.fabric.EmptyReactNativeConfig;
 import com.facebook.react.fabric.FabricJSIModuleProvider;
 import com.facebook.react.fabric.ReactNativeConfig;
 import com.facebook.react.uimanager.ViewManagerRegistry;
-import com.kyuubi.BuildConfig;
-import com.kyuubi.newarchitecture.components.MainComponentsRegistry;
-import com.kyuubi.newarchitecture.modules.MainApplicationTurboModuleManagerDelegate;
+import com.c2h6.Kyuubi.BuildConfig;
+import com.c2h6.Kyuubi.newarchitecture.components.MainComponentsRegistry;
+import com.c2h6.Kyuubi.newarchitecture.modules.MainApplicationTurboModuleManagerDelegate;
 import java.util.ArrayList;
 import java.util.List;
 

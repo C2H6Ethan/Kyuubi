@@ -36,6 +36,11 @@
     "web": {
       "favicon": "./assets/favicon.png"
     },
-    "description": "Cube Timer"
+    "description": "Cube Timer",
+    "extra": {
+      "eas": {
+        "projectId": "922b6e49-2de3-49eb-91d4-536061cd15d1"
+      }
+    }
   }
 }

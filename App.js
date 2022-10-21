@@ -1,7 +1,7 @@
 import React, { Component } from 'react';
 import { Easing, Animated, Alert } from 'react-native';
 import { StackNavigator } from 'react-navigation'
-import {createMaterialTopTabNavigator} from 'react-navigation-tabs'
+import { createMaterialTopTabNavigator } from '@react-navigation/material-top-tabs';
 import { NavigationContainer } from '@react-navigation/native';
 import { NavigationContext } from '@react-navigation/native';
 import { createStackNavigator } from 'react-navigation-stack';

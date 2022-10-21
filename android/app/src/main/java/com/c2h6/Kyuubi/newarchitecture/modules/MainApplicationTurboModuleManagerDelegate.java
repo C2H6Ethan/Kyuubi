@@ -1,4 +1,4 @@
-package com.kyuubi.newarchitecture.modules;
+package com.c2h6.Kyuubi.newarchitecture.modules;
 
 import com.facebook.jni.HybridData;
 import com.facebook.react.ReactPackage;

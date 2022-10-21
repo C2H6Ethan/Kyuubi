@@ -1,8 +1,7 @@
 import { StatusBar } from 'expo-status-bar';
 import React, { Component } from 'react';
-import {Modal, Pressable, SafeAreaView, StyleSheet, Text, TouchableOpacity, View, Button, Image, Switch, TargetComponent, Alert } from 'react-native';
+import {Modal, Pressable, SafeAreaView, StyleSheet, Text, TouchableOpacity, View, Button, Image, Switch, TargetComponent, Alert, ScrollView } from 'react-native';
 import  AsyncStorage  from "@react-native-async-storage/async-storage";
-import { ScrollView, TouchableWithoutFeedback } from 'react-native-gesture-handler';
 import moment from 'moment';
 import {Picker} from '@react-native-picker/picker';
 import BannerAd from "../Ads/BannerAdSolves";
